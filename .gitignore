@@ -1,0 +1,4 @@
+# 项目内部数据/测试脚本，不随游戏发布
+.workbuddy/
+node_modules/
+*.log

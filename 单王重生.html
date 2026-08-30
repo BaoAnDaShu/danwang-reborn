@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>40岁：单王重生</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body { width:100%; height:100%; overflow:hidden; font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif; background:#20242c; }
+  #game { position:fixed; inset:0; display:block; }
+  /* ===== HUD ===== */
+  #hud { position:fixed; top:0; left:0; right:0; display:flex; align-items:center; gap:14px;
+    padding:8px 14px; background:linear-gradient(180deg,rgba(25,28,35,.92),rgba(25,28,35,.72));
+    color:#fff; z-index:10; flex-wrap:wrap; font-size:14px; user-select:none; }
+  #hud .badge { background:linear-gradient(135deg,#ff9f43,#ee5253); padding:4px 12px; border-radius:20px; font-weight:700; font-size:13px; white-space:nowrap; }
+  #hud .stat { display:flex; align-items:center; gap:5px; white-space:nowrap; }
+  #hud .stat b { color:#ffd32a; }
+  #hud .spacer { flex:1; }
+  #hud button { background:#3d4455; color:#fff; border:none; border-radius:8px; padding:5px 12px; font-size:13px; cursor:pointer; }
+  #hud button:hover { background:#535d75; }
+  #rankbar { width:130px; height:7px; background:#3d4455; border-radius:4px; overflow:hidden; }
+  #rankbar i { display:block; height:100%; background:linear-gradient(90deg,#ffd32a,#ff9f43); width:0%; }
+  /* ===== 订单面板 ===== */
+  #orders { position:fixed; top:52px; right:10px; width:215px; display:flex; flex-direction:column; gap:8px; z-index:9; }
+  .ocard { background:rgba(25,28,35,.85); border:2px solid; border-radius:10px; padding:8px 10px; color:#fff; font-size:12px; }
+  .ohead { display:flex; justify-content:space-between; align-items:center; }
+  .ohead b { font-size:13px; }
+  .opay { color:#ffd32a; font-weight:700; }
+  .oroute { color:#b8c0d0; margin:3px 0; }
+  .obar { height:6px; background:#3d4455; border-radius:3px; overflow:hidden; margin:3px 0; }
+  .obar i { display:block; height:100%; border-radius:3px; }
+  .otime { text-align:right; color:#e17055; font-weight:600; }
+  /* ===== 提示 ===== */
+  #toasts { position:fixed; bottom:130px; left:50%; transform:translateX(-50%); display:flex; flex-direction:column; align-items:center; gap:6px; z-index:20; pointer-events:none; }
+  .toast { background:rgba(25,28,35,.92); color:#fff; padding:7px 16px; border-radius:20px; font-size:14px;
+    animation:pop .25s ease; transition:opacity .4s; max-width:86vw; text-align:center; box-shadow:0 4px 14px rgba(0,0,0,.35); }
+  .toast.warn { background:rgba(160,45,45,.92); }
+  @keyframes pop { from { transform:translateY(12px) scale(.9); opacity:0; } to { transform:none; opacity:1; } }
+  /* ===== 小地图 ===== */
+  #mini { position:fixed; left:10px; bottom:10px; z-index:9; border:2px solid rgba(255,255,255,.5); border-radius:8px; background:#232833; }
+  /* ===== 遮罩界面 ===== */
+  .overlay { position:fixed; inset:0; z-index:30; display:flex; align-items:center; justify-content:center; background:rgba(12,14,20,.78); backdrop-filter:blur(3px); }
+  .panel { background:#262b36; border-radius:16px; padding:28px 32px; color:#fff; max-width:560px; width:92%; max-height:88vh; overflow-y:auto; box-shadow:0 12px 40px rgba(0,0,0,.5); }
+  .panel h1 { font-size:30px; margin-bottom:6px; background:linear-gradient(90deg,#ffd32a,#ff9f43,#ee5253); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .panel h2 { font-size:22px; margin-bottom:10px; }
+  .panel .story { color:#c8cfdd; line-height:1.8; font-size:14px; margin:12px 0; padding:12px 14px; background:rgba(0,0,0,.25); border-radius:10px; border-left:3px solid #ff9f43; }
+  .panel .ctrl { color:#9aa3b5; font-size:13px; line-height:2; }
+  .panel .ctrl b { color:#ffd32a; background:#3d4455; padding:1px 7px; border-radius:5px; font-family:monospace; }
+  .bigbtn { display:block; width:100%; margin-top:18px; padding:13px; font-size:18px; font-weight:700; color:#fff; border:none; border-radius:12px; cursor:pointer; background:linear-gradient(135deg,#ff9f43,#ee5253); }
+  .bigbtn:hover { filter:brightness(1.1); }
+  .bigbtn:disabled { filter:grayscale(.7) brightness(.7); cursor:not-allowed; }
+  #shopList { display:flex; flex-direction:column; gap:9px; margin:12px 0; }
+  .sitem { display:flex; justify-content:space-between; align-items:center; background:#313848; border:1px solid #454e63;
+    color:#fff; padding:11px 14px; border-radius:10px; cursor:pointer; font-size:14px; text-align:left; }
+  .sitem:hover:not(:disabled) { background:#3b4356; }
+  .sitem:disabled { opacity:.45; cursor:not-allowed; }
+  .sitem .sinfo span { display:block; color:#9aa3b5; font-size:12px; margin-top:2px; }
+  .sitem .scost { color:#ffd32a; font-weight:700; white-space:nowrap; margin-left:12px; }
+  .stats { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:14px 0; font-size:14px; }
+  .stats div { background:rgba(0,0,0,.25); padding:9px 12px; border-radius:8px; }
+  .stats b { color:#ffd32a; float:right; }
+  .hidden { display:none !important; }
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+
+<div id="hud" class="hidden">
+  <span class="badge" id="uiRank">见习骑手</span>
+  <div><div id="uiProg" style="font-size:11px;color:#b8c0d0;">0 / 8 单</div><div id="rankbar"><i></i></div></div>
+  <span class="stat">💰 <b id="uiMoney">¥50</b></span>
+  <span class="stat">⭐ <b id="uiRating">5.0</b></span>
+  <span class="stat" id="uiWeather">☀️ 晴天</span>
+  <span class="stat" id="uiDash">⚡ 冲刺 就绪</span>
+  <span class="spacer"></span>
+  <button onclick="openShop()">🛒 商店(B)</button>
+  <button onclick="togglePause()">⏸ 暂停(P)</button>
+</div>
+
+<div id="orders"></div>
+<div id="toasts"></div>
+<canvas id="mini" width="150" height="114"></canvas>
+
+<!-- 开始界面 -->
+<div id="menu" class="overlay">
+  <div class="panel">
+    <h1>40岁：单王重生</h1>
+    <div class="story">
+      2026年，你40岁，工号0037。昨天你还在大厂维护祖传代码，今天HR递来的优化名单上，就有你的名字。<br><br>
+      走出大楼那一刻，手机弹出一条短信：<b>「急招骑手，时间自由，多劳多得。」</b><br><br>
+      你摸了摸敲了十八年键盘的手，突然笑了——写代码练出的路径规划、996熬出的铁人体质、改bug磨出的耐心……这一世，全都能用上。<br><br>
+      目标只有一个：<b>完成80单，登顶「城市单王」。</b>
+    </div>
+    <div class="ctrl">
+      <b>WASD</b> / <b>方向键</b> 移动（手机端按住屏幕拖动）&nbsp;&nbsp;<b>空格</b> 冲刺（程序员技能：编译加速）<br>
+      <b>B</b> 打开商店升级装备&nbsp;&nbsp;<b>P</b> 暂停<br>
+      🏪 到餐馆取餐 → 🏠 送到客户手中，越快小费越多；超时会掉评分，评分低于3.0会被辞退！<br>
+      小心马路上的汽车，注意天气变化——雨天路滑但单价更高。当心「产品经理」随时发动的需求变更……
+    </div>
+    <button class="bigbtn" onclick="startGame()">开 始 接 单</button>
+  </div>
+</div>
+
+<!-- 商店 -->
+<div id="shop" class="overlay hidden">
+  <div class="panel">
+    <h2>🛒 装备升级 <span style="font-size:16px;color:#ffd32a;float:right;">💰 <span id="shopMoney">0</span></span></h2>
+    <div style="color:#9aa3b5;font-size:13px;">40岁的经验告诉你：工具顺手的程序员，才能跑赢需求。</div>
+    <div id="shopList"></div>
+    <button class="bigbtn" onclick="closeShop()">继续跑单 (B)</button>
+  </div>
+</div>
+
+<!-- 结束界面 -->
+<div id="end" class="overlay hidden">
+  <div class="panel">
+    <h1 id="endTitle">城市单王！</h1>
+    <div class="story" id="endStory"></div>
+    <div class="stats" id="endStats"></div>
+    <button class="bigbtn" onclick="location.reload()">再 重 生 一 次</button>
+  </div>
+</div>
+
+<script>
+'use strict';
+/* ================= 工具 ================= */
+const $ = s => document.querySelector(s);
+const clamp = (v,a,b) => v<a?a:v>b?b:v;
+const dist = (x1,y1,x2,y2) => Math.hypot(x2-x1,y2-y1);
+const rand = (a,b) => a+Math.random()*(b-a);
+const pick = arr => arr[Math.floor(Math.random()*arr.length)];
+
+/* ================= 音效 ================= */
+let AC = null;
+function beep(f=660,d=0.08,type='sine',v=0.14){
+  try{
+    if(!AC) AC = new (window.AudioContext||window.webkitAudioContext)();
+    const o=AC.createOscillator(), g=AC.createGain();
+    o.type=type; o.frequency.value=f; o.connect(g); g.connect(AC.destination);
+    const t=AC.currentTime;
+    g.gain.setValueAtTime(v,t);
+    g.gain.exponentialRampToValueAtTime(0.001,t+d);
+    o.start(t); o.stop(t+d);
+  }catch(e){}
+}
+function chord(fs){ fs.forEach((f,i)=>setTimeout(()=>beep(f,0.14,'triangle',0.12), i*90)); }
+
+/* ================= 世界 ================= */
+const TILE=64, COLS=25, ROWS=19, W=COLS*TILE, H=ROWS*TILE;
+const roadRows=[2,7,12,16], roadCols=[2,7,12,17,22];
+const isRoad=(tx,ty)=>roadRows.includes(ty)||roadCols.includes(tx);
+function hash(x,y){ let h=(x*374761393+y*668265263)^((x+7)*(y+13)*2654435761); h=(h^(h>>>13))*1274126177; h=(h^(h>>>16))>>>0; return h/4294967295; }
+
+const REST_DEF=[
+  {name:'码农食堂',   items:['红烧需求','宫保鸡丁','祖传代码炒饭']},
+  {name:'Java咖啡',   items:['美式咖啡','燕麦拿铁','冰萃美式']},
+  {name:'Bug拌面',    items:['Bug拌面','麻酱凉皮']},
+  {name:'重启麻辣烫', items:['麻辣烫','重启冒菜']},
+  {name:'面向对象烧烤',items:['烤串十连','烤茄子','面向对象腰子']},
+  {name:'递归奶茶',   items:['递归奶茶','三分糖波波','奶绿']},
+  {name:'内存溢出火锅',items:['火锅外卖','冒脑花套餐']},
+  {name:'版本回滚炸鸡',items:['炸鸡套餐','回滚鸡翅']},
+];
+const REST_POS=[[4,1],[10,3],[19,1],[4,9],[10,9],[19,9],[4,14],[14,14]];
+const restaurants = REST_POS.map((p,i)=>({ x:p[0]*TILE+TILE/2, y:p[1]*TILE+TILE/2, name:REST_DEF[i].name, tx:p[0], ty:p[1] }));
+const restMap = {}; restaurants.forEach(r=>restMap[r.tx+','+r.ty]=r);
+
+const COMPOUNDS=['翠竹苑','科兴花园','东门新村','龙光大厦','幸福里','城中村B区','科苑公寓','望海小区','梧桐郡','创业家园'];
+const houses=[];
+for(let ty=0;ty<ROWS;ty++)for(let tx=0;tx<COLS;tx++){
+  if(isRoad(tx,ty)) continue;
+  if(restMap[tx+','+ty]) continue;
+  if(hash(tx*3+11,ty*5+7)<0.30){
+    houses.push({ x:tx*TILE+TILE/2, y:ty*TILE+TILE/2, name:pick(COMPOUNDS)+(1+Math.floor(hash(tx+5,ty+9)*20))+'栋', tx, ty });
+  }
+}
+const houseMap={}; houses.forEach(h=>houseMap[h.tx+','+h.ty]=h);
+
+/* 汽车 */
+const carCols=['#e74c3c','#3498db','#9b59b6','#1abc9c','#e67e22','#95a5a6','#34495e','#f0932b'];
+const cars=[];
+roadRows.forEach(r=>{ const y=r*TILE+TILE/2;
+  for(let i=0;i<2;i++) cars.push({axis:'h',fixed:y,pos:rand(0,W),dir:i?1:-1,speed:rand(115,205),color:pick(carCols),len:46,wid:26});
+});
+roadCols.forEach(c=>{ const x=c*TILE+TILE/2;
+  for(let i=0;i<2;i++) cars.push({axis:'v',fixed:x,pos:rand(0,H),dir:i?1:-1,speed:rand(115,205),color:pick(carCols),len:46,wid:26});
+});
+
+/* ================= 游戏状态 ================= */
+const weathers=[
+  {id:'sun',  name:'晴天', icon:'☀️', pay:1.0, spd:1.0},
+  {id:'rain', name:'雨天', icon:'🌧️', pay:1.4, spd:0.85},
+  {id:'night',name:'夜晚', icon:'🌙', pay:1.2, spd:1.0},
+];
+const RANKS=[
+  {n:'见习骑手',need:0,c:'#95a5a6'},{n:'青铜骑手',need:8,c:'#cd7f32'},
+  {n:'白银骑手',need:18,c:'#b0c4de'},{n:'黄金骑手',need:32,c:'#ffd700'},
+  {n:'钻石骑手',need:50,c:'#7ee8fa'},{n:'城市单王',need:80,c:'#ff5e3a'},
+];
+const UPG=[
+  {key:'speed',name:'🔋 换新电瓶',  desc:'最高速度 +35',        costs:[120,300,650]},
+  {key:'bag',  name:'🎒 加大保温箱', desc:'同时接单数 +1',       costs:[150,400]},
+  {key:'rain', name:'🧥 高级雨衣',  desc:'雨天不再减速',        costs:[220]},
+  {key:'nav',  name:'📱 导航Pro会员',desc:'订单配送时限 +20%',   costs:[200]},
+];
+const WIN_ORDERS=80, FIRE_RATING=3.0;
+
+let state='menu';
+let player, money, rating, completed, failed, orders, orderSeq;
+let levels, bagCap, weather, weatherTimer, eventTimer, spawnTimer;
+let dashTime, dashCd, boostTime, payBoostTime, shake, playTime, warnShown, camX=0, camY=0, lastDt=0.016;
+let rainDrops=[];
+
+function resetGame(){
+  player={ x:12*TILE+TILE/2, y:7*TILE+TILE/2, face:0, stun:0, invuln:2 };
+  money=50; rating=5.0; completed=0; failed=0; orders=[]; orderSeq=1;
+  levels={speed:0,bag:0,rain:0,nav:0}; bagCap=2;
+  weather=weathers[0]; weatherTimer=75; eventTimer=22; spawnTimer=1.2;
+  dashTime=0; dashCd=0; boostTime=0; payBoostTime=0; shake=0; playTime=0; warnShown=false;
+  rainDrops=[]; for(let i=0;i<90;i++) rainDrops.push({x:Math.random()*2000,y:Math.random()*1200,s:rand(500,900)});
+}
+resetGame();
+
+/* ================= 输入 ================= */
+const keys={};
+window.addEventListener('keydown',e=>{
+  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key)||e.code==='Space') e.preventDefault();
+  const k=e.key.toLowerCase(); keys[k]=true;
+  if(e.code==='Space') tryDash();
+  if(k==='b'){ if(state==='play') openShop(); else if(state==='shop') closeShop(); }
+  if(k==='p'&&(state==='play'||state==='pause')) togglePause();
+});
+window.addEventListener('keyup',e=>{ keys[e.key.toLowerCase()]=false; });
+
+const canvas=$('#game'), ctx=canvas.getContext('2d');
+let vw=0, vh=0;
+function resize(){ vw=canvas.width=window.innerWidth; vh=canvas.height=window.innerHeight; }
+window.addEventListener('resize',resize); resize();
+
+let touch=null;
+canvas.addEventListener('pointerdown',e=>{ touch={bx:e.clientX,by:e.clientY,x:e.clientX,y:e.clientY}; try{canvas.setPointerCapture(e.pointerId);}catch(err){} });
+canvas.addEventListener('pointermove',e=>{ if(touch){touch.x=e.clientX; touch.y=e.clientY;} });
+window.addEventListener('pointerup',()=>touch=null);
+
+function tryDash(){
+  if(state!=='play'||dashCd>0) return;
+  dashTime=3.2; dashCd=14;
+  toast('⚡ 编译加速！冲刺 3 秒！');
+  beep(880,0.15,'square',0.07);
+}
+
+/* ================= 订单 ================= */
+function spawnOrder(){
+  const rIdx=Math.floor(Math.random()*restaurants.length);
+  const rest=restaurants[rIdx];
+  let cust=houses[0];
+  for(let i=0;i<40;i++){ const c=pick(houses); if(dist(rest.x,rest.y,c.x,c.y)>350){ cust=c; break; } }
+  const d=dist(rest.x,rest.y,cust.x,cust.y)*1.35;
+  const pay=Math.round((4+d*0.018)*10)/10;
+  const total=Math.round((18+d/160*2.4)*(levels.nav?1.2:1));
+  orders.push({ id:orderSeq++, rest, cust, food:pick(REST_DEF[rIdx].items),
+    state:'pickup', timeLeft:total, total, pay,
+    color:'hsl('+((orderSeq*47)%360)+' 70% 50%)' });
+  toast('📱 新订单：'+pickTake(orders)+'');
+  beep(520,0.1,'triangle');
+}
+function pickTake(os){ const o=os[os.length-1]; return o.food+'（'+o.rest.name+'）→ '+o.cust.name; }
+
+function deliverOrder(idx){
+  const o=orders[idx];
+  let pay=o.pay*weather.pay*(payBoostTime>0?2:1);
+  let tip=0;
+  if(o.timeLeft>o.total*0.4){ tip=Math.round(pay*0.4*10)/10; pay+=tip; }
+  pay=Math.round(pay*10)/10;
+  money=Math.round((money+pay)*10)/10;
+  completed++; rating=Math.min(5,rating+0.02);
+  orders.splice(idx,1);
+  toast('🎉 送达 '+o.cust.name+'！+¥'+pay.toFixed(1)+(tip?'（含小费 ¥'+tip.toFixed(1)+'）':''));
+  chord([660,880,990]);
+  checkRank();
+}
+function timeoutOrder(idx){
+  const o=orders[idx];
+  orders.splice(idx,1);
+  rating=Math.max(1,rating-0.25); failed++;
+  toast('⏰ 超时！'+o.food+'凉了…客户差评，评分 -0.25','warn');
+  beep(180,0.4,'sawtooth');
+  if(rating<FIRE_RATING+0.6&&!warnShown){ warnShown=true; toast('⚠️ 站长警告：评分再掉就要被辞退了！','warn'); }
+  if(rating<FIRE_RATING) endGame(false);
+}
+function checkRank(){
+  const ri=rankIdx();
+  if(ri>0&&completed===RANKS[ri].need&&completed<WIN_ORDERS){
+    toast('🏆 晋升：'+RANKS[ri].n+'！');
+    chord([523,659,784,1046]);
+  }
+  if(completed>=WIN_ORDERS) endGame(true);
+}
+function rankIdx(){ let i=0; RANKS.forEach((r,k)=>{ if(completed>=r.need) i=k; }); return i; }
+
+/* ================= 随机事件 ================= */
+function doEvent(){
+  const roll=Math.floor(Math.random()*4);
+  if(roll===0){
+    const carried=orders.filter(o=>o.state==='deliver');
+    if(carried.length){
+      const o=pick(carried);
+      let c=pick(houses); for(let i=0;i<20;i++){ const t=pick(houses); if(dist(player.x,player.y,t.x,t.y)>300){c=t;break;} }
+      o.cust=c; o.timeLeft+=10; o.total=Math.max(o.total,o.timeLeft);
+      toast('📲 产品经理：客户改地址了！需求变更！（时限+10秒）','warn');
+      beep(300,0.2,'square');
+    } else toast('📲 产品经理：这个需求先不做，下个版本再说……');
+  } else if(roll===1){
+    boostTime=10; toast('🧠 老码农直觉发动！10 秒内移速 +35%');
+  } else if(roll===2){
+    payBoostTime=25; toast('🔥 平台高峰补贴！25 秒内配送收入 ×2');
+  } else {
+    let best=-1,bt=1e9;
+    orders.forEach((o,i)=>{ if(o.timeLeft<bt){bt=o.timeLeft;best=i;} });
+    if(best>=0){ orders[best].timeLeft-=8; toast('📞 客户催单：能不能快点！（某订单 -8秒）','warn'); }
+    else toast('📞 妈妈来电：好好吃饭，别老熬夜跑单。');
+  }
+}
+
+/* ================= 更新 ================= */
+function update(dt){
+  lastDt=dt; playTime+=dt;
+  /* 天气 */
+  weatherTimer-=dt;
+  if(weatherTimer<=0){
+    weatherTimer=75;
+    const others=weathers.filter(w=>w!==weather);
+    weather=pick(others);
+    toast(weather.icon+' 天气变化：'+weather.name+(weather.id==='rain'?'（路滑减速，单价×1.4）':weather.id==='night'?'（夜间补贴×1.2）':''));
+  }
+  /* 事件 */
+  eventTimer-=dt;
+  if(eventTimer<=0){ eventTimer=rand(25,40); doEvent(); }
+  /* 订单生成 */
+  spawnTimer-=dt;
+  if(orders.length===0) spawnTimer=Math.min(spawnTimer,1.2);
+  if(spawnTimer<=0){ spawnTimer=rand(5,9); if(orders.length<bagCap) spawnOrder(); }
+  /* 计时 */
+  for(let i=orders.length-1;i>=0;i--){
+    orders[i].timeLeft-=dt;
+    if(orders[i].timeLeft<=0){ timeoutOrder(i); if(state!=='play') return; }
+  }
+  /* 玩家移动 */
+  let dx=0,dy=0;
+  if(keys['arrowleft']||keys['a'])dx--;
+  if(keys['arrowright']||keys['d'])dx++;
+  if(keys['arrowup']||keys['w'])dy--;
+  if(keys['arrowdown']||keys['s'])dy++;
+  if(touch){
+    let vx=(touch.x-touch.bx)/48, vy=(touch.y-touch.by)/48;
+    const m=Math.hypot(vx,vy);
+    if(m>0.18){ if(m>1){vx/=m;vy/=m;} dx=vx; dy=vy; }
+  }
+  if(player.stun>0){ player.stun-=dt; dx=0; dy=0; }
+  const m=Math.hypot(dx,dy);
+  if(m>0){
+    if(m>1){dx/=m;dy/=m;}
+    let spd=175+levels.speed*35;
+    if(weather.id==='rain'&&!levels.rain) spd*=weather.spd;
+    if(dashTime>0) spd*=1.9;
+    if(boostTime>0) spd*=1.35;
+    player.x=clamp(player.x+dx*spd*dt,16,W-16);
+    player.y=clamp(player.y+dy*spd*dt,16,H-16);
+    player.face=Math.atan2(dy,dx);
+  }
+  dashTime=Math.max(0,dashTime-dt);
+  dashCd=Math.max(0,dashCd-dt);
+  boostTime=Math.max(0,boostTime-dt);
+  payBoostTime=Math.max(0,payBoostTime-dt);
+  player.invuln=Math.max(0,player.invuln-dt);
+  /* 汽车 */
+  cars.forEach(c=>{
+    c.pos+=c.dir*c.speed*dt;
+    const lim=(c.axis==='h'?W:H)+80;
+    if(c.pos>lim) c.pos=-80;
+    if(c.pos<-80) c.pos=lim;
+  });
+  /* 撞车 */
+  if(player.invuln<=0){
+    for(const c of cars){
+      const cx=c.axis==='h'?c.pos:c.fixed;
+      const cy=c.axis==='h'?c.fixed:c.pos;
+      if(Math.abs(player.x-cx)<c.len/2+13 && Math.abs(player.y-cy)<c.wid/2+13){
+        const ang=Math.atan2(player.y-cy,player.x-cx);
+        player.x=clamp(cx+Math.cos(ang)*70,16,W-16);
+        player.y=clamp(cy+Math.sin(ang)*70,16,H-16);
+        player.stun=1.0; player.invuln=2.5; shake=0.6;
+        orders.forEach(o=>o.timeLeft-=5);
+        toast('💥 哎哟！被车撞了，餐差点洒了！（各订单 -5秒）','warn');
+        beep(110,0.35,'sawtooth');
+        break;
+      }
+    }
+  }
+  /* 取餐 / 送餐 */
+  for(let i=orders.length-1;i>=0;i--){
+    const o=orders[i];
+    if(o.state==='pickup'&&dist(player.x,player.y,o.rest.x,o.rest.y)<54){
+      o.state='deliver';
+      toast('✅ 已取餐：'+o.food+' → 快送到 '+o.cust.name+'！');
+      beep(700,0.1);
+    } else if(o.state==='deliver'&&dist(player.x,player.y,o.cust.x,o.cust.y)<50){
+      deliverOrder(i);
+      if(state!=='play') return;
+    }
+  }
+}
+
+/* ================= 绘制 ================= */
+function draw(){
+  ctx.save();
+  if(shake>0){ ctx.translate(rand(-1,1)*shake*12, rand(-1,1)*shake*12); shake=Math.max(0,shake-lastDt*1.6); }
+  /* 相机 */
+  camX=W<=vw ? (W-vw)/2 : clamp(player.x-vw/2,0,W-vw);
+  camY=H<=vh ? (H-vh)/2 : clamp(player.y-vh/2,0,H-vh);
+  /* 地面 */
+  ctx.fillStyle='#20242c'; ctx.fillRect(0,0,vw,vh);
+  ctx.translate(-camX,-camY);
+  const tx0=clamp(Math.floor(camX/TILE)-1,0,COLS-1), tx1=clamp(Math.floor((camX+vw)/TILE)+1,0,COLS-1);
+  const ty0=clamp(Math.floor(camY/TILE)-1,0,ROWS-1), ty1=clamp(Math.floor((camY+vh)/TILE)+1,0,ROWS-1);
+  const now=performance.now()/1000;
+  for(let ty=ty0;ty<=ty1;ty++)for(let tx=tx0;tx<=tx1;tx++){
+    const x=tx*TILE,y=ty*TILE,h1=hash(tx,ty);
+    if(isRoad(tx,ty)){
+      ctx.fillStyle='#59616f'; ctx.fillRect(x,y,TILE,TILE);
+      ctx.fillStyle='#f5f6fa';
+      if(roadRows.includes(ty)) ctx.fillRect(x+(tx%2?6:34),y+TILE/2-2,24,4);
+      if(roadCols.includes(tx)) ctx.fillRect(x+TILE/2-2,y+(ty%2?6:34),4,24);
+    } else if(restMap[tx+','+ty]){
+      ctx.fillStyle='#ffd8a8'; ctx.fillRect(x+3,y+3,TILE-6,TILE-6);
+      ctx.strokeStyle='#e17055'; ctx.lineWidth=2; ctx.strokeRect(x+3,y+3,TILE-6,TILE-6);
+    } else if(houseMap[tx+','+ty]){
+      ctx.fillStyle='#cdd7e5'; ctx.fillRect(x+5,y+5,TILE-10,TILE-10);
+      ctx.fillStyle='#8395a7'; ctx.fillRect(x+5,y+5,TILE-10,8);
+    } else if(h1<0.55){
+      ctx.fillStyle='hsl(220,'+(6+h1*6)+'%,'+(42+h1*14)+'%)';
+      ctx.fillRect(x+3,y+3,TILE-6,TILE-6);
+      ctx.fillStyle='rgba(255,255,255,.14)';
+      ctx.fillRect(x+8,y+10,14,10); ctx.fillRect(x+36,y+10,14,10);
+      ctx.fillRect(x+8,y+34,14,10); ctx.fillRect(x+36,y+34,14,10);
+    } else {
+      ctx.fillStyle='#94c290'; ctx.fillRect(x,y,TILE,TILE);
+      if(hash(tx*3,ty*5)>0.68){
+        ctx.fillStyle='#5d8f57';
+        ctx.beginPath(); ctx.arc(x+TILE/2,y+TILE/2,13,0,7); ctx.fill();
+        ctx.fillStyle='#4a7a45';
+        ctx.beginPath(); ctx.arc(x+TILE/2-6,y+TILE/2+4,8,0,7); ctx.fill();
+      }
+    }
+  }
+  /* 餐馆图标 */
+  restaurants.forEach(r=>{
+    const by=r.y-34+Math.sin(now*3+r.tx)*3;
+    ctx.font='22px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('🏪',r.x,by);
+    ctx.font='bold 11px sans-serif'; ctx.fillStyle='#fff';
+    ctx.strokeStyle='rgba(0,0,0,.7)'; ctx.lineWidth=3;
+    ctx.strokeText(r.name,r.x,r.y+26); ctx.fillText(r.name,r.x,r.y+26);
+  });
+  /* 汽车绘制 */
+  cars.forEach(c=>{
+    ctx.save();
+    if(c.axis==='h') ctx.translate(c.pos,c.fixed);
+    else { ctx.translate(c.fixed,c.pos); ctx.rotate(Math.PI/2); }
+    ctx.fillStyle=c.color;
+    roundRect(-c.len/2,-c.wid/2,c.len,c.wid,6); ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,.75)';
+    roundRect(c.dir*c.len*0.14,-c.wid/2+4,12,c.wid-8,3); ctx.fill();
+    if(weather.id==='night'){
+      ctx.fillStyle='#ffe97a';
+      ctx.beginPath(); ctx.arc(c.dir*c.len/2-3,-5,3,0,7); ctx.arc(c.dir*c.len/2-3,5,3,0,7); ctx.fill();
+    }
+    ctx.restore();
+  });
+  /* 订单标记 */
+  orders.forEach(o=>{
+    const t=o.state==='pickup'?o.rest:o.cust;
+    const by=t.y-58+Math.sin(now*4+o.id)*6;
+    ctx.strokeStyle=o.color; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(t.x,by+14); ctx.lineTo(t.x,t.y-10); ctx.stroke();
+    ctx.fillStyle=o.color;
+    ctx.beginPath(); ctx.arc(t.x,by,15,0,7); ctx.fill();
+    ctx.strokeStyle='#fff'; ctx.lineWidth=2.5; ctx.stroke();
+    ctx.font='15px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(o.state==='pickup'?'🍜':'📦',t.x,by+1);
+    const pulse=(now*1.4+o.id)%1;
+    ctx.strokeStyle=o.color; ctx.globalAlpha=1-pulse; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.arc(t.x,t.y,18+pulse*22,0,7); ctx.stroke();
+    ctx.globalAlpha=1;
+  });
+  /* 玩家 */
+  drawPlayer(now);
+  /* 雨天 */
+  if(weather.id==='rain'){
+    ctx.strokeStyle='rgba(180,200,255,.5)'; ctx.lineWidth=1.5;
+    ctx.save(); ctx.translate(camX,camY);
+    rainDrops.forEach(d=>{
+      d.y+=d.s*lastDt; d.x-=120*lastDt;
+      if(d.y>vh+20){d.y=-20;d.x=Math.random()*(vw+200);}
+      ctx.beginPath(); ctx.moveTo(d.x,d.y); ctx.lineTo(d.x+6,d.y+14); ctx.stroke();
+    });
+    ctx.restore();
+  }
+  /* 夜晚 */
+  if(weather.id==='night'){
+    const px=player.x-camX, py=player.y-camY;
+    const g=ctx.createRadialGradient(px,py,40,px,py,340);
+    g.addColorStop(0,'rgba(8,12,35,0)');
+    g.addColorStop(0.5,'rgba(8,12,35,.28)');
+    g.addColorStop(1,'rgba(8,12,35,.62)');
+    ctx.save(); ctx.translate(camX,camY);
+    ctx.fillStyle=g; ctx.fillRect(0,0,vw,vh);
+    ctx.restore();
+  }
+  ctx.restore();
+  /* 屏幕边缘方向箭头 */
+  orders.forEach(o=>{
+    const t=o.state==='pickup'?o.rest:o.cust;
+    drawEdgeArrow(t,o.color);
+  });
+  drawMinimap();
+}
+function roundRect(x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r);
+  ctx.closePath();
+}
+function drawPlayer(now){
+  const p=player, rc=RANKS[rankIdx()].c;
+  if(p.invuln>0&&Math.floor(now*10)%2===0) ctx.globalAlpha=0.45;
+  ctx.fillStyle='rgba(0,0,0,.25)';
+  ctx.beginPath(); ctx.ellipse(p.x,p.y+13,15,6,0,0,7); ctx.fill();
+  /* 保温箱 */
+  ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.face+Math.PI/2);
+  ctx.fillStyle='#e58e26'; roundRect(-10,4,20,16,3); ctx.fill();
+  ctx.strokeStyle='#b5671a'; ctx.lineWidth=2; ctx.stroke();
+  /* 车身 */
+  ctx.fillStyle='#f6b93b';
+  ctx.beginPath(); ctx.arc(0,0,13,0,7); ctx.fill();
+  ctx.strokeStyle='#c98f1c'; ctx.lineWidth=2; ctx.stroke();
+  /* 头盔（段位色） */
+  ctx.fillStyle=rc;
+  ctx.beginPath(); ctx.arc(0,-2,9,Math.PI,0); ctx.fill();
+  ctx.fillStyle='#fff';
+  ctx.beginPath(); ctx.arc(0,-6,3,0,7); ctx.fill();
+  if(dashTime>0){
+    ctx.strokeStyle='#ffe97a'; ctx.lineWidth=3; ctx.globalAlpha=0.8;
+    ctx.beginPath(); ctx.arc(0,0,20+Math.sin(now*12)*3,0,7); ctx.stroke();
+    ctx.globalAlpha=1;
+  }
+  ctx.restore();
+  ctx.globalAlpha=1;
+}
+function drawEdgeArrow(t,color){
+  const sx=t.x-camX, sy=t.y-camY;
+  if(sx>40&&sx<vw-40&&sy>72&&sy<vh-40) return;
+  const px=vw/2, py=vh/2;
+  const ang=Math.atan2(sy-py,sx-px);
+  const mx=clamp(sx,70,vw-250), my=clamp(sy,95,vh-70);
+  ctx.save(); ctx.translate(mx,my); ctx.rotate(ang);
+  ctx.fillStyle=color;
+  ctx.beginPath(); ctx.moveTo(16,0); ctx.lineTo(-9,-11); ctx.lineTo(-4,0); ctx.lineTo(-9,11); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle='#fff'; ctx.lineWidth=2; ctx.stroke();
+  ctx.rotate(-ang);
+  ctx.font='bold 12px sans-serif'; ctx.fillStyle='#fff'; ctx.textAlign='center';
+  const dm=Math.round(dist(player.x,player.y,t.x,t.y)/8);
+  ctx.strokeStyle='rgba(0,0,0,.7)'; ctx.lineWidth=3;
+  ctx.strokeText(dm+'m',0,26); ctx.fillText(dm+'m',0,26);
+  ctx.restore();
+}
+/* 小地图 */
+const mini=$('#mini'), mctx=mini.getContext('2d');
+const miniBase=document.createElement('canvas'); miniBase.width=150; miniBase.height=114;
+(function(){
+  const c=miniBase.getContext('2d'), sc=150/W;
+  c.fillStyle='#2b3140'; c.fillRect(0,0,150,114);
+  c.fillStyle='#59616f';
+  roadRows.forEach(r=>c.fillRect(0,r*TILE*sc,150,Math.max(2,TILE*sc)));
+  roadCols.forEach(co=>c.fillRect(co*TILE*sc,0,Math.max(2,TILE*sc),114));
+  c.fillStyle='#ffb142';
+  restaurants.forEach(r=>c.fillRect(r.x*sc-2,r.y*sc-2,4,4));
+})();
+function drawMinimap(){
+  const sc=150/W;
+  mctx.drawImage(miniBase,0,0);
+  orders.forEach(o=>{
+    const t=o.state==='pickup'?o.rest:o.cust;
+    mctx.fillStyle=o.color;
+    mctx.beginPath(); mctx.arc(t.x*sc,t.y*(114/H),3.2,0,7); mctx.fill();
+  });
+  mctx.fillStyle='#fff';
+  mctx.beginPath(); mctx.arc(player.x*sc,player.y*(114/H),3.5,0,7); mctx.fill();
+  mctx.strokeStyle='#000'; mctx.lineWidth=1; mctx.stroke();
+}
+
+/* ================= HUD ================= */
+let hudTimer=0;
+function updateHUD(){
+  const ri=rankIdx();
+  $('#uiRank').textContent=RANKS[ri].n;
+  $('#uiRank').style.background='linear-gradient(135deg,'+RANKS[ri].c+',#ee5253)';
+  const next=ri<RANKS.length-1?RANKS[ri+1]:null;
+  const lo=next?RANKS[ri].need:WIN_ORDERS, hi=next?next.need:WIN_ORDERS;
+  const pct=next?clamp((completed-lo)/(hi-lo)*100,0,100):clamp(completed/WIN_ORDERS*100,0,100);
+  $('#uiProg').textContent=completed+' / '+WIN_ORDERS+' 单'+(next?'（距离 '+next.n+' 还有 '+(next.need-completed)+' 单）':'');
+  $('#rankbar').firstElementChild.style.width=pct+'%';
+  $('#uiMoney').textContent='¥'+money.toFixed(0);
+  $('#uiRating').textContent=rating.toFixed(2);
+  $('#uiWeather').textContent=weather.icon+' '+weather.name+(weather.id==='rain'?' ×1.4':weather.id==='night'?' ×1.2':'');
+  $('#uiDash').textContent=dashCd>0?'⚡ 冲刺 '+dashCd.toFixed(0)+'s':'⚡ 冲刺 就绪';
+}
+function renderOrders(){
+  const box=$('#orders');
+  box.innerHTML='';
+  orders.forEach(o=>{
+    const pct=clamp(o.timeLeft/o.total*100,0,100);
+    const d=document.createElement('div');
+    d.className='ocard';
+    d.style.borderColor=o.color;
+    d.innerHTML='<div class="ohead"><b>'+o.food+'</b><span class="opay">¥'+(o.pay*weather.pay*(payBoostTime>0?2:1)).toFixed(1)+'</span></div>'+
+      '<div class="oroute">'+(o.state==='pickup'?'🏪 '+o.rest.name+' · 去取餐':'🏠 '+o.cust.name+' · 去送达')+'</div>'+
+      '<div class="obar"><i style="width:'+pct+'%;background:'+o.color+'"></i></div>'+
+      '<div class="otime">⏱ '+Math.max(0,o.timeLeft).toFixed(0)+'s</div>';
+    box.appendChild(d);
+  });
+}
+
+/* ================= 提示 ================= */
+function toast(msg,cls){
+  const box=$('#toasts');
+  const d=document.createElement('div');
+  d.className='toast'+(cls?' '+cls:'');
+  d.textContent=msg;
+  box.appendChild(d);
+  while(box.children.length>5) box.firstChild.remove();
+  setTimeout(()=>{ d.style.opacity='0'; setTimeout(()=>d.remove(),400); },3200);
+}
+
+/* ================= 商店 / 暂停 ================= */
+function openShop(){ if(state!=='play')return; state='shop'; renderShop(); $('#shop').classList.remove('hidden'); }
+function closeShop(){ if(state!=='shop')return; state='play'; $('#shop').classList.add('hidden'); }
+function togglePause(){
+  if(state==='play'){ state='pause'; toast('⏸ 已暂停'); }
+  else if(state==='pause'){ state='play'; }
+}
+function renderShop(){
+  $('#shopMoney').textContent=money.toFixed(0);
+  const list=$('#shopList'); list.innerHTML='';
+  UPG.forEach(u=>{
+    const lvl=levels[u.key];
+    const maxed=lvl>=u.costs.length;
+    const cost=maxed?0:u.costs[lvl];
+    const btn=document.createElement('button');
+    btn.className='sitem'+(maxed?' maxed':'');
+    btn.disabled=!maxed&&money<cost;
+    btn.innerHTML='<div class="sinfo"><b>'+u.name+' Lv.'+lvl+(maxed?' · MAX':'')+'</b><span>'+u.desc+'</span></div>'+
+      '<div class="scost">'+(maxed?'已满级':'¥'+cost)+'</div>';
+    btn.onclick=()=>{
+      if(maxed||money<cost) return;
+      money-=cost; levels[u.key]++;
+      if(u.key==='bag') bagCap=2+levels.bag;
+      beep(980,0.1); toast('🛠️ 升级成功：'+u.name);
+      renderShop(); updateHUD();
+    };
+    list.appendChild(btn);
+  });
+}
+
+/* ================= 开始 / 结束 ================= */
+function startGame(){
+  resetGame();
+  state='play';
+  $('#menu').classList.add('hidden');
+  $('#hud').classList.remove('hidden');
+  toast('🌧️ 雨后初晴，开工！先去餐馆取餐（跟着彩色箭头走）');
+  chord([392,523,659]);
+}
+function endGame(win){
+  state=win?'win':'over';
+  let best=0;
+  try{ best=Math.max(+(localStorage.getItem('dwBest')||0),completed); localStorage.setItem('dwBest',best); }catch(e){}
+  $('#endTitle').textContent=win?'🏆 城市单王！':'💀 被辞退了……';
+  $('#endStory').innerHTML=win
+    ? '第 <b>80</b> 单准时送达。你站上站点表彰台，站长把「城市单王」的绶带披在你肩上。<br><br>昔日的 bug 变成了路线算法，996 的体质成了抢单优势，产品经理的需求变更再也难不倒你。有记者问你40岁转行怕不怕，你说：<br><br><b>「代码和人一样，重写一遍，性能只会更好。」</b><br><br>人生下半场，刚刚开始。'
+    : '评分跌破 3.0，平台冻结了你的账号。你蹲在路边，看着手机上「账号已停用」的红字。<br><br>没关系——重生过一次的人，不怕重开。<br><br><b>这一次，先记得：别把每一个订单都接成 P0 需求。</b>';
+  $('#endStats').innerHTML=
+    '<div>完成订单 <b>'+completed+' 单</b></div><div>超时差评 <b>'+failed+' 单</b></div>'+
+    '<div>累计收入 <b>¥'+money.toFixed(0)+'</b></div><div>最终评分 <b>'+rating.toFixed(2)+'</b></div>'+
+    '<div>跑单时长 <b>'+Math.round(playTime/60)+' 分钟</b></div><div>历史最佳 <b>'+best+' 单</b></div>';
+  $('#end').classList.remove('hidden');
+  if(win) chord([523,659,784,1046,1318]); else beep(150,0.6,'sawtooth');
+}
+
+/* ================= 主循环 ================= */
+let last=performance.now();
+function loop(now){
+  const dt=Math.min(0.05,(now-last)/1000);
+  last=now;
+  if(state==='play') update(dt);
+  draw();
+  hudTimer+=dt;
+  if(hudTimer>0.15){ hudTimer=0; if(state!=='menu'){ updateHUD(); renderOrders(); } }
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

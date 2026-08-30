@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>40岁：单王重生（放置经营版）</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body { font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif; background:#f6f1e7; color:#2d3436; min-height:100vh; padding-bottom:30px; }
+  /* ===== 顶栏 ===== */
+  #top { position:sticky; top:0; z-index:20; background:linear-gradient(135deg,#2d3436,#3d4852); color:#fff;
+    padding:9px 18px; box-shadow:0 3px 12px rgba(0,0,0,.25); }
+  #top .row1 { display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+  #top .badge { background:linear-gradient(135deg,#ff9f43,#ee5253); padding:5px 14px; border-radius:18px; font-weight:700; font-size:14px; }
+  #top .stat { font-size:13px; }
+  #top .stat b { color:#ffd32a; font-size:16px; }
+  #top .spacer { flex:1; }
+  #top .row2 { display:flex; gap:12px; flex-wrap:wrap; font-size:11.5px; color:#b8c0d0; margin-top:6px; align-items:center; }
+  #top .row2 b { color:#55efc4; }
+  #top .tag { background:#4b5563; padding:2px 9px; border-radius:10px; }
+  #top .tag.hot { background:#8e44ad; color:#fff; font-weight:700; }
+  #rankWrap { width:100%; margin-top:6px; }
+  #rankWrap .lbl { font-size:11px; color:#dfe6e9; display:flex; justify-content:space-between; }
+  #rankBar { height:8px; background:#57606f; border-radius:4px; overflow:hidden; margin-top:3px; }
+  #rankBar i { display:block; height:100%; width:0%; background:linear-gradient(90deg,#ffd32a,#ff9f43); transition:width .3s; }
+  #expBar { height:6px; background:#57606f; border-radius:3px; overflow:hidden; width:120px; display:inline-block; vertical-align:middle; }
+  #expBar i { display:block; height:100%; width:0%; background:linear-gradient(90deg,#55efc4,#00b894); }
+  /* ===== 布局 ===== */
+  #main { max-width:1040px; margin:14px auto; padding:0 14px; display:flex; flex-direction:column; gap:13px; }
+  .card { background:#fff; border-radius:14px; padding:14px 16px; box-shadow:0 3px 10px rgba(0,0,0,.07); }
+  .card h3 { font-size:15px; margin-bottom:10px; color:#2d3436; display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+  .card h3 small { color:#95a5a6; font-weight:400; font-size:12px; }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:13px; }
+  @media (max-width:780px){ .grid2 { grid-template-columns:1fr; } }
+  /* ===== 主线 ===== */
+  #questCard { background:linear-gradient(135deg,#fffdf6,#fff4de); border:2px solid #ffd97a; }
+  #questCard .qtitle { display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+  #questCard .qname { font-size:16px; font-weight:800; color:#8a5a00; }
+  #questCard .qdesc { font-size:13px; color:#7f6a3d; margin:6px 0 8px; }
+  #questCard .qbar { height:10px; background:#f3e8c8; border-radius:5px; overflow:hidden; }
+  #questCard .qbar i { display:block; height:100%; background:linear-gradient(90deg,#ffd32a,#ff9f43); transition:width .3s; }
+  #questCard .qfoot { display:flex; justify-content:space-between; align-items:center; margin-top:8px; font-size:12.5px; color:#7f6a3d; }
+  #claimBtn { border:none; border-radius:9px; padding:8px 18px; font-size:13px; font-weight:700; cursor:pointer; background:#dfe6e9; color:#b2bec3; }
+  #claimBtn.ready { background:linear-gradient(135deg,#ff9f43,#ee5253); color:#fff; animation:glow2 1.4s infinite; }
+  @keyframes glow2 { 0%,100%{ box-shadow:0 0 3px #ff9f43; } 50%{ box-shadow:0 0 14px #ff9f43; } }
+  #questList { font-size:11px; color:#a89760; margin-top:8px; display:flex; flex-wrap:wrap; gap:5px; }
+  .qdot { padding:2px 8px; border-radius:10px; background:#f3e8c8; }
+  .qdot.done { background:#00b894; color:#fff; }
+  .qdot.cur { background:#ff9f43; color:#fff; font-weight:700; }
+  /* ===== 标签页 ===== */
+  .tabs { display:flex; gap:8px; flex-wrap:wrap; }
+  .tabBtn { border:2px solid #fff; background:#e6e2d8; color:#6b6b6b; padding:8px 18px; border-radius:11px 11px 0 0;
+    font-size:14px; font-weight:700; cursor:pointer; font-family:inherit; }
+  .tabBtn.active { background:#fff; color:#e17055; border-color:#fff; box-shadow:0 3px 10px rgba(0,0,0,.07); }
+  .pane { display:none; }
+  .pane.active { display:block; }
+  /* ===== 条目 ===== */
+  .row { display:flex; align-items:center; gap:10px; padding:9px 10px; border:1px solid #eee; border-radius:10px; margin-bottom:8px; background:#fffdf8; }
+  .row .ava { width:38px; height:38px; border-radius:50%; background:linear-gradient(135deg,#ffe08a,#ff9f43);
+    display:flex; align-items:center; justify-content:center; font-size:19px; flex-shrink:0; }
+  .row .info { flex:1; min-width:0; }
+  .row .info b { font-size:14px; }
+  .row .info span { display:block; font-size:11.5px; color:#8395a7; }
+  .row.owned { background:#f4fbf7; border-color:#b8e6cd; }
+  button.act { border:none; border-radius:9px; padding:8px 12px; font-size:13px; font-weight:700; cursor:pointer;
+    background:linear-gradient(135deg,#ff9f43,#ee5253); color:#fff; white-space:nowrap; font-family:inherit; }
+  button.act:hover { filter:brightness(1.08); }
+  button.act.lock { background:#eceff1; color:#95a5a6; }
+  button.act.green { background:linear-gradient(135deg,#00b894,#009432); }
+  button.act.green.lock { background:#eceff1; color:#95a5a6; }
+  button.act.purple { background:linear-gradient(135deg,#a55eea,#6c5ce7); }
+  button.act.purple.lock { background:#eceff1; color:#95a5a6; }
+  button.act.blue { background:linear-gradient(135deg,#0984e3,#0097e6); }
+  button.act.blue.lock { background:#eceff1; color:#95a5a6; }
+  .note { font-size:12px; color:#8395a7; padding:6px; text-align:center; }
+  /* 抢单 */
+  #grabBtn { width:100%; padding:20px; font-size:20px; font-weight:800; border:none; border-radius:14px; cursor:pointer;
+    background:linear-gradient(135deg,#ffd32a,#ff9f43); color:#5d4037; box-shadow:0 6px 0 #e08e1f; transition:transform .05s; font-family:inherit; }
+  #grabBtn:active { transform:translateY(4px); box-shadow:0 2px 0 #e08e1f; }
+  #grabBtn.cd { filter:grayscale(.45); }
+  /* 技能树 */
+  .skill { border:1px solid #eee; border-radius:10px; padding:9px 11px; margin-bottom:7px; background:#fffdf8; display:flex; gap:10px; align-items:center; }
+  .skill.on { background:linear-gradient(135deg,#f0fff8,#e8f7ef); border-color:#55efc4; }
+  .skill.ban { opacity:.55; }
+  .skill .si { flex:1; min-width:0; }
+  .skill .si b { font-size:13.5px; }
+  .skill .si span { display:block; font-size:11.5px; color:#8395a7; margin-top:2px; }
+  .skill .si .req { color:#c0392b; }
+  .branch { font-size:12px; font-weight:700; color:#6c5ce7; margin:10px 0 6px; }
+  /* 人物 */
+  .char { border:1px solid #eee; border-radius:10px; padding:10px 11px; margin-bottom:8px; background:#fffdf8; }
+  .char .ch { display:flex; align-items:center; gap:9px; }
+  .char .ch .ava { width:40px; height:40px; border-radius:50%; background:linear-gradient(135deg,#ffd6e0,#ff9ff3);
+    display:flex; align-items:center; justify-content:center; font-size:20px; }
+  .char .ch b { font-size:14px; }
+  .char .ch span { display:block; font-size:11.5px; color:#8395a7; }
+  .char .rel { margin-left:auto; font-size:12px; font-weight:700; color:#e17055; }
+  .favbar { height:7px; background:#f2eaea; border-radius:4px; overflow:hidden; margin-top:7px; }
+  .favbar i { display:block; height:100%; background:linear-gradient(90deg,#ff9ff3,#ee5253); }
+  .perk { font-size:11.5px; color:#8395a7; margin-top:5px; }
+  .perk.on { color:#009432; font-weight:700; }
+  /* 日志 */
+  #log { max-height:210px; overflow-y:auto; font-size:12.5px; line-height:1.9; color:#636e72; }
+  #log div { border-bottom:1px dashed #f0ece4; }
+  /* ===== 弹窗 ===== */
+  .overlay { position:fixed; inset:0; z-index:50; background:rgba(20,22,28,.66); display:flex; align-items:center; justify-content:center; padding:16px; }
+  .overlay.hidden { display:none; }
+  .panel { background:#fff; border-radius:16px; padding:22px 24px; max-width:540px; width:100%; max-height:88vh; overflow-y:auto; box-shadow:0 14px 44px rgba(0,0,0,.35); }
+  .panel h2 { font-size:19px; margin-bottom:8px; }
+  .panel .desc { font-size:14px; line-height:1.85; color:#636e72; margin-bottom:14px; }
+  .panel .who { font-size:12.5px; color:#a55eea; font-weight:700; margin-bottom:6px; }
+  .panel .choice { display:block; width:100%; text-align:left; margin-bottom:9px; padding:12px 14px; border-radius:11px;
+    border:2px solid #f0ece4; background:#fffdf8; font-size:14px; cursor:pointer; font-family:inherit; }
+  .panel .choice:hover { border-color:#ff9f43; background:#fff7ec; }
+  .panel .choice.poor { color:#b2bec3; }
+  .panel .cd { height:6px; background:#f0f0f0; border-radius:3px; overflow:hidden; margin-top:6px; }
+  .panel .cd i { display:block; height:100%; background:#ee5253; width:100%; }
+  .statgrid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:12px 0; }
+  .statgrid div { background:#f8f6f0; padding:10px 12px; border-radius:9px; font-size:13px; }
+  .statgrid b { color:#e17055; float:right; }
+  .toast { position:fixed; left:50%; bottom:26px; transform:translateX(-50%); background:rgba(45,52,54,.94); color:#fff;
+    padding:9px 18px; border-radius:20px; font-size:14px; z-index:60; animation:pop .25s ease; pointer-events:none; max-width:86vw; }
+  .toast.warn { background:rgba(160,45,45,.94); }
+  @keyframes pop { from{ transform:translate(-50%,14px); opacity:0; } to{ transform:translate(-50%,0); opacity:1; } }
+  .fly { position:fixed; z-index:70; font-weight:800; color:#009432; pointer-events:none; font-size:17px; animation:flyup .9s ease forwards; }
+  @keyframes flyup { to{ transform:translateY(-60px); opacity:0; } }
+  #foot { text-align:center; font-size:11.5px; color:#aab; margin-top:14px; }
+  #foot a { color:#8395a7; cursor:pointer; }
+  /* ===== 开始页 ===== */
+  #startScreen{ position:fixed; inset:0; z-index:100; display:flex; align-items:center; justify-content:center;
+    background:radial-gradient(120% 120% at 50% 0%,#3a2b5e 0%,#2a2752 45%,#171a33 100%); color:#fff; padding:24px; text-align:center; }
+  #startScreen.hidden{ display:none; }
+  #startScreen .box{ max-width:580px; animation:fadein .5s ease; }
+  @keyframes fadein{ from{ opacity:0; transform:translateY(14px);} to{ opacity:1; transform:none;} }
+  #startScreen h1{ font-size:42px; margin:0 0 4px; letter-spacing:3px; font-weight:900;
+    background:linear-gradient(90deg,#ffd86b,#ff9f43,#ff6b6b); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  #startScreen .sub{ font-size:15px; color:#cfd3ff; margin-bottom:20px; }
+  #startScreen .intro{ font-size:13.5px; line-height:1.95; color:#c9cdf0; background:rgba(255,255,255,.06);
+    border:1px solid rgba(255,255,255,.12); border-radius:16px; padding:18px 20px; margin-bottom:24px; text-align:left; }
+  #startScreen .intro b{ color:#ffd86b; font-weight:700; }
+  #startScreen .intro .hi{ color:#7bed9f; }
+  #startScreen .btns{ display:flex; gap:14px; justify-content:center; flex-wrap:wrap; }
+  #startScreen button{ font-family:inherit; cursor:pointer; border:none; border-radius:13px; padding:14px 32px; font-size:16px; font-weight:800; transition:transform .12s; }
+  #startScreen button:active{ transform:scale(.96); }
+  #startScreen .primary{ background:linear-gradient(90deg,#ff9f43,#ff6b6b); color:#fff; box-shadow:0 10px 26px rgba(255,107,107,.4); }
+  #startScreen .ghost{ background:rgba(255,255,255,.12); color:#fff; border:1px solid rgba(255,255,255,.28); }
+  #startScreen .tiny{ margin-top:20px; font-size:11.5px; color:#9aa0d8; }
+</style>
+</head>
+<body>
+
+<div id="startScreen">
+  <div class="box">
+    <h1>40岁 · 单王重生</h1>
+    <div class="sub" id="startSub">被裁码农 → 外卖单王 → 站长 → 创业老板</div>
+    <div class="intro">
+      2026，你 40 岁，工号 0037。昨天还在写祖传代码，今天 HR 的名单上有你。<br>
+      你注册成了骑手。<b>跟着顶部主线</b>跑单升级，用算法思维规划路线，从见习骑手一路干到 <b>城市单王</b>，
+      再当 <b>站长</b>、开 <b>电动车店</b>、做 <b>换电网络</b>，攒钱买房买车。<br>
+      途中会遇到 <b>苏晴</b>、<b>老王</b>、<b>飞哥</b>、<b>老赵</b>……把故事续下去。<br>
+      <span class="hi">放置经营：不拼手速，做决策看数值滚雪球。关掉页面也有离线收益。</span>
+    </div>
+    <div class="btns" id="startBtns"></div>
+    <div class="tiny">进度自动保存在本机浏览器 · 数据不上传 · 本地服务 127.0.0.1:8123</div>
+  </div>
+</div>
+
+<div id="top">
+  <div class="row1">
+    <span class="badge" id="uiRank">见习骑手</span>
+    <span class="stat">💰 <b id="uiMoney">¥0</b> <span style="font-size:11px;color:#dfe6e9" id="uiRate">(+¥0/秒)</span></span>
+    <span class="stat">📦 <b id="uiOrders">0</b> 单</span>
+    <span class="stat">⭐ <b id="uiRating">5.00</b></span>
+    <span class="stat">👤 Lv.<b id="uiLevel">1</b> <span id="expBar"><i></i></span> <span style="font-size:11px;color:#dfe6e9" id="uiExp"></span></span>
+    <span class="stat">💡 技能点 <b id="uiSp">0</b></span>
+    <span class="spacer"></span>
+    <span class="stat" id="uiTime" style="font-size:12px;color:#dfe6e9">🕐 上午平峰</span>
+  </div>
+  <div class="row2" id="uiSupply"></div>
+  <div id="rankWrap">
+    <div class="lbl"><span id="uiRankNext"></span><span id="uiOrdersToKing"></span></div>
+    <div id="rankBar"><i></i></div>
+  </div>
+</div>
+
+<div id="main">
+  <!-- 主线 -->
+  <div class="card" id="questCard">
+    <div class="qtitle">
+      <span style="font-size:15px;font-weight:800;">📖 主线剧情</span>
+      <span class="qname" id="qName"></span>
+    </div>
+    <div class="qdesc" id="qDesc"></div>
+    <div class="qbar"><i id="qBarFill"></i></div>
+    <div class="qfoot">
+      <span id="qProg"></span>
+      <button id="claimBtn" onclick="claimQuest()">领取奖励</button>
+    </div>
+    <div id="questList"></div>
+  </div>
+
+  <div class="tabs">
+    <button class="tabBtn active" data-p="p1" onclick="tab('p1')">🛵 跑单</button>
+    <button class="tabBtn" data-p="p2" onclick="tab('p2')">🏬 商业</button>
+    <button class="tabBtn" data-p="p3" onclick="tab('p3')">🌳 技能</button>
+    <button class="tabBtn" data-p="p4" onclick="tab('p4')">❤️ 人物</button>
+  </div>
+
+  <!-- 跑单 -->
+  <div class="pane active" id="p1">
+    <div class="grid2">
+      <div class="card">
+        <h3>🛵 骑手团队 <small>运力来源</small></h3>
+        <div id="riders"></div>
+      </div>
+      <div class="card">
+        <h3>🗺️ 商圈与口碑 <small>派单来源</small></h3>
+        <div id="districts"></div>
+      </div>
+    </div>
+    <div style="height:13px"></div>
+    <div class="grid2">
+      <div class="card">
+        <h3>⚙️ 装备与技术</h3>
+        <div id="upgs"></div>
+      </div>
+      <div class="card">
+        <h3>⚡ 手动抢单</h3>
+        <button id="grabBtn" onclick="grab()">接 一 单 ！</button>
+        <div class="note">手动抢一单 ≈ ¥<b id="grabPay">18</b>，还能涨经验。冷却 1.2 秒。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 商业 -->
+  <div class="pane" id="p2">
+    <div class="card">
+      <h3>🏬 我的店铺 <small id="shopHint"></small></h3>
+      <div id="shops"></div>
+    </div>
+    <div style="height:13px"></div>
+    <div class="card">
+      <h3>🏠 资产与投资 <small>买了就是被动收入，还能涨属性</small></h3>
+      <div id="assets"></div>
+    </div>
+    <div style="height:13px"></div>
+    <div class="card">
+      <h3>📜 站点日志</h3>
+      <div id="log"></div>
+    </div>
+  </div>
+
+  <!-- 技能 -->
+  <div class="pane" id="p3">
+    <div class="card">
+      <h3>📊 个人属性 <small>每点消耗 1 技能点（升级 / 剧情都能拿技能点）</small></h3>
+      <div id="attrs"></div>
+    </div>
+    <div style="height:13px"></div>
+    <div class="card">
+      <h3>🌳 技能树 <small>三条流派，点亮后永久生效</small></h3>
+      <div id="skillTree"></div>
+    </div>
+  </div>
+
+  <!-- 人物 -->
+  <div class="pane" id="p4">
+    <div class="card">
+      <h3>❤️ 人物关系 <small>剧情选择会改变好感，好感解锁永久加成</small></h3>
+      <div id="chars"></div>
+    </div>
+  </div>
+
+  <div id="foot">进度自动保存 · <a onclick="hardReset()">清空存档重新开局</a></div>
+</div>
+
+<!-- 随机事件 -->
+<div id="evBox" class="overlay hidden">
+  <div class="panel">
+    <h2 id="evTitle"></h2>
+    <div class="desc" id="evDesc"></div>
+    <div id="evChoices"></div>
+    <div class="cd"><i id="evCd"></i></div>
+  </div>
+</div>
+
+<!-- 剧情弹窗 -->
+<div id="storyBox" class="overlay hidden">
+  <div class="panel">
+    <div class="who" id="storyWho"></div>
+    <h2 id="storyTitle"></h2>
+    <div class="desc" id="storyDesc"></div>
+    <div class="statgrid" id="storyStats"></div>
+    <div id="storyChoices"></div>
+    <button class="act" id="storyOk" style="width:100%;padding:12px;font-size:15px" onclick="closeStory()">知道了，继续干</button>
+  </div>
+</div>
+
+<script>
+'use strict';
+/* ================= 工具 ================= */
+const $ = s => document.querySelector(s);
+const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+const rand=(a,b)=>a+Math.random()*(b-a);
+const pick=arr=>arr[Math.floor(Math.random()*arr.length)];
+function fmt(n){
+  if(n<10000) return n<100 ? n.toFixed(1) : Math.floor(n).toLocaleString();
+  const u=['万','亿','万亿']; let i=-1;
+  while(n>=10000 && i<u.length-1){ n/=10000; i++; }
+  return n.toFixed(2)+u[i];
+}
+function toast(msg,warn){
+  const d=document.createElement('div'); d.className='toast'+(warn?' warn':''); d.textContent=msg;
+  document.body.appendChild(d);
+  setTimeout(()=>{ d.style.transition='opacity .4s'; d.style.opacity='0'; setTimeout(()=>d.remove(),420); },2600);
+}
+function log(msg){
+  const box=$('#log'); const d=document.createElement('div');
+  const t=new Date(); const hh=String(t.getHours()).padStart(2,'0'), mm=String(t.getMinutes()).padStart(2,'0');
+  d.textContent='['+hh+':'+mm+'] '+msg;
+  box.prepend(d);
+  while(box.children.length>50) box.lastChild.remove();
+}
+let AC=null;
+function beep(f=660,d=0.08,type='sine',v=0.12){
+  try{
+    if(!AC) AC=new (window.AudioContext||window.webkitAudioContext)();
+    const o=AC.createOscillator(),g=AC.createGain();
+    o.type=type; o.frequency.value=f; o.connect(g); g.connect(AC.destination);
+    const t=AC.currentTime;
+    g.gain.setValueAtTime(v,t); g.gain.exponentialRampToValueAtTime(0.001,t+d);
+    o.start(t); o.stop(t+d);
+  }catch(e){}
+}
+function chord(fs){ fs.forEach((f,i)=>setTimeout(()=>beep(f,0.14,'triangle',0.1),i*90)); }
+
+/* ================= 静态配置 ================= */
+const RANKS=[
+  {n:'见习骑手',need:0},{n:'青铜骑手',need:8},{n:'白银骑手',need:18},
+  {n:'黄金骑手',need:32},{n:'钻石骑手',need:50},{n:'城市单王',need:80},
+  {n:'站长',need:120},{n:'区域总监',need:0},
+];
+const KING_ORDERS=80;
+const RIDER_POOL=[
+  {name:'老王',emoji:'👨‍🦲'},{name:'小李',emoji:'🧑'},{name:'阿强',emoji:'💪'},
+  {name:'大刘',emoji:'🧔'},{name:'小美',emoji:'👩'},{name:'老周',emoji:'👴'},
+  {name:'阿杰',emoji:'🕶️'},{name:'二娃',emoji:'👦'},{name:'飞哥',emoji:'🏍️'},
+];
+const YOU={name:'你（前架构师）',emoji:'🧑‍💻'};
+const EQUIP=[
+  {key:'scooter',icon:'🔋',name:'换电瓶',     desc:()=>'每单基础价 +¥2（当前 ¥'+payPerOrder().toFixed(0)+'/单）'},
+  {key:'algo',   icon:'🧠',name:'路径优化算法', desc:()=>'全员配送效率 ×1.15（当前 Lv.'+S.equip.algo+'）'},
+  {key:'brand',  icon:'⭐',name:'口碑经营',    desc:()=>'派单量 +8%、小费 ×1.25（当前 Lv.'+S.equip.brand+'）'},
+  {key:'coach',  icon:'📋',name:'带徒弟培训',  desc:()=>'骑手升级费用 ×0.92（当前 Lv.'+S.equip.coach+'）'},
+];
+const DISTRICTS=[
+  {name:'老城区',   cost:0,     supply:0.00},
+  {name:'CBD商圈',  cost:800,   supply:0.35},
+  {name:'大学城',   cost:2600,  supply:0.38},
+  {name:'高新区',   cost:8000,  supply:0.42},
+  {name:'滨江新区', cost:24000, supply:0.50},
+  {name:'全城覆盖', cost:70000, supply:0.65},
+];
+const SLOTS=[
+  {n:'凌晨低谷',icon:'🌙',sup:0.45,pay:1.0},{n:'上午平峰',icon:'🌤️',sup:1.0,pay:1.0},
+  {n:'午高峰',icon:'🔥',sup:1.9,pay:1.25},{n:'下午平峰',icon:'☀️',sup:1.1,pay:1.0},
+  {n:'晚高峰',icon:'🌆',sup:2.1,pay:1.35},{n:'夜宵档',icon:'🍢',sup:1.3,pay:1.2},
+];
+const ATTRS=[
+  {k:'stam', n:'体力',   icon:'💪',desc:'每点：团队配送效率 +3%'},
+  {k:'drive',n:'车技',   icon:'🛵',desc:'每点：手动抢单收益 +20%'},
+  {k:'memo', n:'路线记忆',icon:'🗺️',desc:'每点：平台派单量 +7%'},
+  {k:'talk', n:'沟通',   icon:'🗣️',desc:'每点：小费倍率 +6%、评分恢复 +40%'},
+  {k:'calm', n:'抗压',   icon:'🧘',desc:'每点：负面事件损失 -12%'},
+];
+const SKILLS=[
+  {id:'pace',   b:'速度流',n:'老司机步频', d:'团队配送效率 +18%',        need:2, sp:1},
+  {id:'shortcut',b:'速度流',n:'抄近道',    d:'手动抢单收益 +60%',        need:3, sp:1, pre:'pace'},
+  {id:'dualbatt',b:'速度流',n:'双电瓶并联', d:'团队配送效率 +25%',        need:5, sp:1, pre:'shortcut'},
+  {id:'fleet',  b:'速度流',n:'车队指挥',   d:'骑手名额 +1，团队效率 +10%', need:8, sp:2, pre:'dualbatt'},
+  {id:'words',  b:'口碑流',n:'好评话术',   d:'评分自然恢复 +120%',       need:2, sp:1},
+  {id:'smile',  b:'口碑流',n:'微笑服务',   d:'平台派单量 +18%',          need:4, sp:1, pre:'words'},
+  {id:'vip',    b:'口碑流',n:'VIP客户群',  d:'每单单价 +18%',            need:6, sp:1, pre:'smile'},
+  {id:'rec',    b:'口碑流',n:'平台推荐位',  d:'平台派单量 +35%',          need:9, sp:2, pre:'vip'},
+  {id:'manage', b:'商业流',n:'站点经营',   d:'所有店铺收入 +30%',        need:10,sp:1, chief:1},
+  {id:'supply', b:'商业流',n:'供应链管理',  d:'骑手升级费用 -18%',        need:13,sp:1, pre:'manage', chief:1},
+  {id:'swapnet',b:'商业流',n:'换电网络',   d:'换电柜收入 ×1.8',          need:16,sp:1, pre:'supply',  chief:1},
+  {id:'capital',b:'商业流',n:'资本运作',   d:'全部被动收入 +60%',        need:20,sp:2, pre:'swapnet', chief:1},
+];
+const SHOPS=[
+  {key:'ebike',n:'🛵 电动车店',     base:1500, inc:10, d:'每级：¥10/秒，团队效率 +5%'},
+  {key:'swap', n:'🔌 换电柜网络',   base:3200, inc:26, d:'每级：¥26/秒，派单量 +7%'},
+  {key:'food', n:'🍜 连锁餐饮投资', base:9000, inc:75, d:'每级：¥75/秒'},
+  {key:'cafe', n:'☕ 苏晴的咖啡店', base:6000, inc:58, d:'每级：¥58/秒，好感 ≥70 解锁'},
+];
+const ASSETS=[
+  {id:'ebike2',n:'属于自己的电动车',e:'🛵',cost:900,   d:'团队效率 +10%'},
+  {id:'wuling',n:'五菱宏光（拉货车）',e:'🚐',cost:9000, d:'派单量 +15%，¥30/秒'},
+  {id:'house1',n:'老破小两居',e:'🏠',cost:22000,  d:'租金 ¥45/秒，妈妈能来住'},
+  {id:'store', n:'临街商铺',e:'🏪',cost:130000, d:'租金 ¥260/秒，店铺收入 +12%'},
+  {id:'tesla', n:'特斯拉 Model Y',e:'🚗',cost:200000, d:'派单 +12%，¥160/秒'},
+  {id:'house2',n:'江景大平层',e:'🏢',cost:650000, d:'租金 ¥1100/秒'},
+];
+const CHARS=[
+  {id:'suqing',n:'苏晴',e:'☕',role:'便利店老板娘',perk:45,
+   pt:'好感 ≥45：她给你留饭，全部收入 +8%', m:()=>fav('suqing')>=45?1.08:1},
+  {id:'laowang',n:'老王',e:'👨‍🦲',role:'老骑手 · 你的第一个兄弟',perk:50,
+   pt:'好感 ≥50：团队配送效率 +12%', m:()=>fav('laowang')>=50?1.12:1},
+  {id:'feige',n:'张飞（飞哥）',e:'🏍️',role:'宿敌 · 上届单王',perk:40,
+   pt:'好感 ≥40：单王之争后他带你，派单量 +12%', m:()=>fav('feige')>=40?1.12:1},
+  {id:'zhaozhan',n:'老赵',e:'🧔',role:'站长 · 你的上级',perk:60,
+   pt:'好感 ≥60：站长全力支持，全部收入 +15%', m:()=>fav('zhaozhan')>=60?1.15:1},
+  {id:'xiaolin',n:'小林',e:'🧑‍🎓',role:'大学生兼职 · 你的徒弟',perk:50,
+   pt:'好感 ≥50：骑手升级费用 -10%', m:()=>fav('xiaolin')>=50?1:1},
+  {id:'mom',n:'妈妈',e:'👵',role:'家人',perk:60,
+   pt:'好感 ≥60：抗压加成，负面事件损失减半', m:()=>fav('mom')>=60?1:1},
+  {id:'kevin',n:'Kevin',e:'👔',role:'前同事 · 回大厂的诱惑',perk:50,
+   pt:'好感 ≥50：他给你介绍高端写字楼订单，单价 +8%', m:()=>fav('kevin')>=50?1.08:1},
+];
+const FAV_LEV=[[0,'一面之缘'],[20,'点头之交'],[45,'互有好感'],[70,'心意相通'],[95,'余生同行']];
+
+/* ================= 主线任务 ================= */
+const QUESTS=[
+  {t:'第一章 · 新手上路', d:'完成 5 单外卖订单', cur:()=>S.lifeOrders, need:5, reward:100,
+   story:'第一单送到写字楼里加班的年轻人手上。他说「谢谢师傅」，你愣了一下——上一次有人对你说谢谢，还是代码评审通过的那天。'},
+  {t:'第二章 · 站稳脚跟', d:'累计完成 20 单', cur:()=>S.lifeOrders, need:20, reward:200,
+   story:'第 20 单，你闭着眼都能背出三个小区的近路。中年人的学习曲线，比想象中陡，也比想象中快。'},
+  {t:'第三章 · 组建团队', d:'招募 1 名骑手（团队 ≥ 2 人）', cur:()=>S.riders.length, need:2, reward:250,
+   story:'老王加入那天只问了一句：「头儿，跟着你干有奔头吗？」你说：「有，我以前带过二十人的团队。」这次你没吹牛。'},
+  {t:'第四章 · 磨刀不误砍柴工', d:'任意一项装备升到 Lv.3', cur:()=>Math.max(S.equip.scooter,S.equip.algo,S.equip.brand,S.equip.coach), need:3, reward:300,
+   story:'新电瓶装上的那一刻，起步快了半秒。你摸着车把想：当年给系统做性能优化，也是这种感觉。'},
+  {t:'第五章 · 黄金时代', d:'累计完成 32 单（晋升黄金骑手）', cur:()=>S.lifeOrders, need:32, reward:400,
+   story:'站长在晨会上念到你名字时，站里的小年轻都回头看你。黄金骑手，40岁，转行三个月。你面无表情，心里已经开了一瓶香槟。'},
+  {t:'第六章 · 半程', d:'累计完成 50 单', cur:()=>S.lifeOrders, need:50, reward:600,
+   story:'第 50 单送完，你在路边买了瓶冰可乐。手机弹出前公司又裁员的消息，你抿了一口——可乐比咖啡顺口。'},
+  {t:'第七章 · 临门一脚', d:'累计完成 60 单', cur:()=>S.lifeOrders, need:60, reward:800,
+   story:'全站点都在传：那个40岁的新人要冲单王了。有人不服，有人佩服。你只关心一件事：明天的路线还能不能再优化 5%。'},
+  {t:'第八章 · 城市单王', d:'累计完成 80 单，登顶单王', cur:()=>S.lifeOrders, need:80, reward:1500,
+   story:'绶带披上肩的那一刻，你想起了被裁那天走出大楼的自己。如果他能看到现在——你笑了笑，其实他看得到，他就是你。\n\n老赵散会后拍拍你：「别急着走，我有话跟你说。」'},
+  {t:'第九章 · 站长的椅子', d:'累计 120 单、团队 ≥ 4 人、评分 ≥ 4.5', cur:()=>Math.min(S.lifeOrders/120,S.riders.length/4,S.rating/4.5)*3, need:3, reward:3000,
+   special:true,
+   story:'老赵把办公室的钥匙放在桌上：「我干不动了，这椅子交给你。」\n\n你接过钥匙，它比工牌重，比键盘重。\n\n从今天起，你不只是骑手——你是站长，可以开店、做换电、投资，把手伸向整座城市。'},
+  {t:'第十章 · 第一家店', d:'买下「电动车店」', cur:()=>S.shops.ebike, need:1, reward:5000,
+   story:'店门上贴着红纸：开业大吉。你站在门口看了很久。\n\n十八年代码生涯，你没拥有过一件属于自己的东西——除了那台公司发的笔记本。现在你有了。'},
+  {t:'第十一章 · 换电计划', d:'铺开「换电柜网络」', cur:()=>S.shops.swap, need:1, reward:8000,
+   story:'第一批换电柜铺进小区那天，骑手们围着看。有人问：「赵哥，这玩意儿靠谱吗？」\n你说：「当年我给服务做负载均衡，就是为了不让任何一台机器累死。换电柜也一样。」'},
+  {t:'第十二章 · 有个家', d:'买下第一套房子', cur:()=>S.assets.house1?1:0, need:1, reward:15000,
+   story:'钥匙在手里沉甸甸的。你在空荡荡的客厅站了十分钟，然后给妈妈打电话：「妈，我有家了，你过来住几天。」\n\n电话那头沉默了三秒，然后是压抑的抽泣声。'},
+  {t:'第十三章 · 商业版图', d:'电动车店 / 换电柜 / 餐饮投资 均达到 Lv.2', cur:()=>Math.min(S.shops.ebike,S.shops.swap,S.shops.food)*1, need:2, reward:30000,
+   story:'三块业务第一次在同一天盈利。你在白板上画着扩张路线图，忽然笑出声——这他妈不就是当年的系统架构图吗。'},
+  {t:'终章 · 城市之王', d:'拥有 3 项资产，且净资产 ≥ ¥30万（进度取两者较慢的一项）', cur:()=>Math.min(assetCount()/3,netWorth()/300000)*3, need:3, reward:100000,
+   special:true,
+   story:'很多年后，有人问起那个40岁被裁、转行送外卖的程序员。\n\n你坐在自己的店里，苏晴在擦杯子，窗外的换电柜亮着绿灯。\n\n你说：「他运气好。他只是发现自己一直会做的一件事——把复杂的东西，跑通。」'},
+];
+
+/* ================= 存档 ================= */
+const SAVE_KEY='dwIdle_v3';
+let S=null;
+function newSave(){
+  return {
+    money:200, lifeOrders:0, totalOrders:0, rating:5.0,
+    level:1, exp:0, sp:1,
+    attrs:{stam:0,drive:0,memo:0,talk:0,calm:0},
+    skills:{},
+    riders:[{...YOU,lvl:1}],
+    equip:{scooter:0,algo:0,brand:0,coach:0},
+    quest:0, isChief:false, director:false,
+    districts:1, shops:{ebike:0,swap:0,food:0,cafe:0}, assets:{},
+    chars:{suqing:0,laowang:5,feige:0,zhaozhan:5,xiaolin:0,mom:30,kevin:10},
+    storyDone:{}, slot:1, slotT:75, buffs:[], eventCd:50, lastSave:Date.now(),
+  };
+}
+function load(){
+  try{
+    const raw=localStorage.getItem(SAVE_KEY);
+    if(!raw) return null;
+    const d=JSON.parse(raw);
+    if(!d||!d.riders) return null;
+    const def=newSave();
+    for(const k in def) if(d[k]===undefined) d[k]=def[k];
+    for(const k in def.attrs) if(d.attrs[k]===undefined) d.attrs[k]=0;
+    for(const k in def.shops) if(d.shops[k]===undefined) d.shops[k]=0;
+    for(const k in def.chars) if(d.chars[k]===undefined) d.chars[k]=0;
+    d.buffs=Array.isArray(d.buffs)?d.buffs.filter(b=>b&&typeof b.mult==='number'&&b.until>Date.now()):[];
+    d.rating=clamp(d.rating,1,5);
+    return d;
+  }catch(e){ return null; }
+}
+function save(){ S.lastSave=Date.now(); try{ localStorage.setItem(SAVE_KEY,JSON.stringify(S)); }catch(e){} }
+function hardReset(){ if(confirm('确定清空存档、重新开始？')){ localStorage.removeItem(SAVE_KEY); location.reload(); } }
+
+/* ================= 数值 ================= */
+function fav(id){ return S.chars[id]||0; }
+function addFav(id,v){ S.chars[id]=clamp(fav(id)+v,0,100); }
+function sk(id){ return !!S.skills[id]; }
+function rankIdx(){
+  if(S.director) return 7;
+  if(S.isChief) return 6;
+  let i=0; for(let k=0;k<6;k++) if(S.lifeOrders>=RANKS[k].need) i=k;
+  return i;
+}
+function maxRiders(){ return 2+rankIdx()+(sk('fleet')?1:0); }
+function expNeed(l){ return Math.round(28*Math.pow(l,1.35)); }
+
+/* —— 运力：团队每秒能送多少单 —— */
+function teamEff(){
+  let m=1;
+  m*=Math.pow(1.15,S.equip.algo);
+  m*=1+0.03*S.attrs.stam;
+  m*=1+0.05*S.shops.ebike;
+  if(sk('pace')) m*=1.18;
+  if(sk('dualbatt')) m*=1.25;
+  if(sk('fleet')) m*=1.10;
+  if(fav('laowang')>=50) m*=1.12;
+  if(S.assets.ebike2) m*=1.10;
+  return m;
+}
+function capacity(){ return S.riders.reduce((s,r)=>s+0.12*r.lvl,0)*teamEff(); }
+/* —— 派单：平台每秒给你多少单 —— */
+function supplyRate(){
+  let s=0.42;
+  for(let i=1;i<=S.districts;i++) s+=DISTRICTS[i-1].supply;
+  s*=1+0.07*S.attrs.memo;
+  s*=1+0.08*S.equip.brand;
+  s*=0.6+S.rating*0.09;
+  s*=SLOTS[slot()].sup;
+  s*=1+0.07*S.shops.swap;
+  if(sk('smile')) s*=1.18;
+  if(sk('rec')) s*=1.35;
+  if(fav('feige')>=40) s*=1.12;
+  if(S.assets.wuling) s*=1.15;
+  if(S.assets.tesla) s*=1.12;
+  return s;
+}
+function actualRate(){ return Math.min(capacity(),supplyRate()); }
+function slot(){ return S.slot % SLOTS.length; }
+function payPerOrder(){ return 6+S.equip.scooter*2; }
+function brandMult(){ return Math.pow(1.25,S.equip.brand)*(1+0.06*S.attrs.talk); }
+function ratingMult(){ return 0.5+S.rating*0.1; }
+function charMult(){ let m=1; CHARS.forEach(c=>{ if(fav(c.id)>=c.perk) m*=c.m(); }); return m; }
+function buffMult(){
+  const now=Date.now();
+  S.buffs=S.buffs.filter(b=>b.until>now);
+  return S.buffs.reduce((m,b)=>m*b.mult,1);
+}
+function vipMult(){ return sk('vip')?1.18:1; }
+function kevinMult(){ return fav('kevin')>=50?1.08:1; }
+function orderIncome(){
+  return actualRate()*payPerOrder()*brandMult()*ratingMult()*charMult()*buffMult()*vipMult()*kevinMult()*SLOTS[slot()].pay;
+}
+function passiveBase(){
+  let p=0;
+  p+=S.shops.ebike*10;
+  p+=S.shops.swap*26*(sk('swapnet')?1.8:1);
+  p+=S.shops.food*75;
+  p+=S.shops.cafe*58;
+  if(S.assets.wuling) p+=30;
+  if(S.assets.house1) p+=45;
+  if(S.assets.store) p+=260;
+  if(S.assets.tesla) p+=160;
+  if(S.assets.house2) p+=1100;
+  return p;
+}
+function passiveIncome(){
+  let p=passiveBase();
+  if(sk('manage')) p*=1.30;
+  if(sk('capital')) p*=1.60;
+  if(S.assets.store) p*=1.12;
+  return p*charMult();
+}
+function income(){ return orderIncome()+passiveIncome(); }
+function grabGain(){
+  return payPerOrder()*3*brandMult()*ratingMult()*charMult()*buffMult()*vipMult()*kevinMult()*SLOTS[slot()].pay*
+    (1+0.2*S.attrs.drive)*(sk('shortcut')?1.6:1);
+}
+function assetCount(){ return ASSETS.filter(a=>S.assets[a.id]).length; }
+function assetValue(){
+  return ASSETS.reduce((s,a)=>s+(S.assets[a.id]?a.cost:0),0)
+    + SHOPS.reduce((s,sh)=>{ let v=0; for(let i=0;i<S.shops[sh.key];i++) v+=Math.round(sh.base*Math.pow(1.85,i)); return s+v; },0);
+}
+function netWorth(){ return S.money+assetValue(); }
+function hireCost(i){ return Math.round(50*Math.pow(2.2,i)); }
+function riderUpCost(r,i){
+  const disc=Math.pow(0.92,S.equip.coach)*(sk('supply')?0.82:1)*(fav('xiaolin')>=50?0.90:1);
+  return Math.round(25*Math.pow(1.45,r.lvl-1)*(i+1)*disc);
+}
+function equipCost(k){
+  const base={scooter:50,algo:120,brand:140,coach:200}[k];
+  const fac ={scooter:1.65,algo:1.85,brand:1.9,coach:2.3}[k];
+  return Math.round(base*Math.pow(fac,S.equip[k]));
+}
+function shopCost(sh){ return Math.round(sh.base*Math.pow(1.85,S.shops[sh.key])); }
+
+/* ================= 渲染 ================= */
+function actBtn(label,cost,cls,fn){
+  const btn=document.createElement('button');
+  const afford=S.money>=cost;
+  btn.className='act '+(cls||'')+(afford?'':' lock');
+  btn.innerHTML=label+'<br><span style="font-size:10.5px;font-weight:400">'+(afford?'点击购买':'还差 ¥'+fmt(cost-S.money))+'</span>';
+  btn.onclick=()=>{
+    if(S.money<cost){ toast('还差 ¥'+fmt(cost-S.money)+'——先跑几单吧',true); beep(220,0.1,'square',0.06); return; }
+    fn();
+  };
+  return btn;
+}
+function renderTop(){
+  const ri=rankIdx();
+  $('#uiRank').textContent=RANKS[ri].n;
+  $('#uiMoney').textContent='¥'+fmt(S.money);
+  $('#uiRate').textContent='(+¥'+fmt(income())+'/秒)';
+  $('#uiOrders').textContent=fmt(S.lifeOrders);
+  $('#uiRating').textContent=S.rating.toFixed(2);
+  $('#uiLevel').textContent=S.level;
+  $('#uiSp').textContent=S.sp;
+  const en=expNeed(S.level);
+  $('#expBar').firstElementChild.style.width=clamp(S.exp/en*100,0,100)+'%';
+  $('#uiExp').textContent=Math.floor(S.exp)+'/'+en+' 经验';
+  const sl=SLOTS[slot()];
+  $('#uiTime').textContent=sl.icon+' '+sl.n+'（剩 '+Math.ceil(S.slotT)+'s）→ '+SLOTS[(slot()+1)%SLOTS.length].n;
+  const cap=capacity(), sup=supplyRate(), act=actualRate();
+  let tip='', cls='';
+  if(cap<sup*0.9){ tip='🔥 爆单！运力不足，快招人 / 升装备'; cls='class="tag hot"'; }
+  else if(cap>sup*1.1){ tip='😴 抢不到单！去解锁商圈、做口碑、升路线记忆'; cls='class="tag hot"'; }
+  else tip='✅ 供需基本平衡，很健康';
+  $('#uiSupply').innerHTML=
+    '<span class="tag">⚡ 运力 <b>'+cap.toFixed(2)+'</b> 单/秒</span>'+
+    '<span class="tag">📡 派单 <b>'+sup.toFixed(2)+'</b> 单/秒</span>'+
+    '<span class="tag">✅ 实际 <b>'+act.toFixed(2)+'</b> 单/秒</span>'+
+    '<span '+cls+'>'+tip+'</span>'+
+    '<span class="tag">💵 送单 ¥'+fmt(orderIncome())+'/秒 · 被动 ¥'+fmt(passiveIncome())+'/秒</span>';
+  const next=RANKS[ri+1];
+  const lo=RANKS[ri].need, hi=next&&next.need?next.need:KING_ORDERS;
+  const pct=next&&next.need?clamp((S.lifeOrders-lo)/(hi-lo)*100,0,100):clamp(S.lifeOrders/KING_ORDERS*100,0,100);
+  $('#rankBar').firstElementChild.style.width=pct+'%';
+  $('#uiRankNext').textContent=next&&next.need?('距离「'+next.n+'」还差 '+Math.ceil(next.need-S.lifeOrders)+' 单'):(S.isChief?'已是站长——向区域总监冲刺':'距离「城市单王」还差 '+Math.ceil(KING_ORDERS-S.lifeOrders)+' 单');
+  $('#uiOrdersToKing').textContent='单王之路 '+Math.floor(S.lifeOrders)+'/'+KING_ORDERS;
+  $('#grabPay').textContent=fmt(grabGain());
+}
+function renderRiders(){
+  const box=$('#riders'); box.innerHTML='';
+  S.riders.forEach((r,i)=>{
+    const div=document.createElement('div'); div.className='row';
+    div.innerHTML='<div class="ava">'+r.emoji+'</div>'+
+      '<div class="info"><b>'+r.name+'</b> <span style="color:#e17055;font-weight:700">Lv.'+r.lvl+'</span>'+
+      '<span>'+riderRateText(r)+'</span></div>';
+    const c=riderUpCost(r,i);
+    div.appendChild(actBtn('升级','¥'+fmt(c),'green',()=>{
+      S.money-=c; r.lvl++; beep(760,0.08); log('📈 '+r.name+' 升到 Lv.'+r.lvl); render();
+    }));
+    box.appendChild(div);
+  });
+  if(S.riders.length<maxRiders() && S.riders.length-1<RIDER_POOL.length){
+    const p=RIDER_POOL[S.riders.length-1], c=hireCost(S.riders.length-1);
+    const div=document.createElement('div'); div.className='row';
+    div.style.border='2px dashed #ffd32a'; div.style.background='#fffbe9';
+    div.innerHTML='<div class="ava" style="background:#f0f0f0">'+p.emoji+'</div>'+
+      '<div class="info"><b>招募 '+p.name+'</b><span>新骑手 0.12 单/秒　名额 '+S.riders.length+'/'+maxRiders()+'（升段位、点「车队指挥」可解锁）</span></div>';
+    div.appendChild(actBtn('招募','¥'+fmt(c),'',()=>{
+      S.money-=c; S.riders.push({...p,lvl:1}); log('🤝 '+p.name+' 加入团队！');
+      if(p.name==='老王') addFav('laowang',10);
+      beep(880,0.12); render();
+    }));
+    box.appendChild(div);
+  } else {
+    const d=document.createElement('div'); d.className='note';
+    d.textContent='骑手名额已满（'+S.riders.length+'/'+maxRiders()+'）：晋升段位或点亮「车队指挥」解锁';
+    box.appendChild(d);
+  }
+}
+function riderRateText(r){ return (0.12*r.lvl).toFixed(2)+' 单/秒（含加成 '+((0.12*r.lvl)*teamEff()).toFixed(2)+'）'; }
+function renderDistricts(){
+  const box=$('#districts'); box.innerHTML='';
+  DISTRICTS.forEach((d,i)=>{
+    const owned=i<S.districts;
+    const div=document.createElement('div'); div.className='row'+(owned?' owned':'');
+    div.innerHTML='<div class="ava" style="'+(owned?'':'background:#f0f0f0')+'">'+(owned?'🏙️':'🔒')+'</div>'+
+      '<div class="info"><b>'+d.name+'</b><span>'+(owned?'已开通，派单 +'+d.supply.toFixed(2)+' 单/秒':'开通后派单 +'+d.supply.toFixed(2)+' 单/秒')+'</span></div>';
+    if(owned){ const s=document.createElement('span'); s.style.cssText='font-size:12px;color:#00b894;font-weight:700'; s.textContent='✔'; div.appendChild(s); }
+    else{
+      const need=S.districts===i;
+      div.appendChild(actBtn('开通','¥'+fmt(d.cost),'blue',()=>{
+        if(!need){ toast('得先一个一个来，先开通「'+DISTRICTS[S.districts].name+'」'); return; }
+        S.money-=d.cost; S.districts++; log('🗺️ 开通商圈：'+d.name+'（派单 +'+d.supply.toFixed(2)+'/秒）');
+        chord([523,659]); render();
+      }));
+    }
+    box.appendChild(div);
+  });
+  const t=document.createElement('div'); t.className='note';
+  t.textContent='派单量还受口碑装备、路线记忆、评分、时段（午/晚高峰 ×2）影响';
+  box.appendChild(t);
+}
+function renderUpgs(){
+  const box=$('#upgs'); box.innerHTML='';
+  EQUIP.forEach(u=>{
+    const c=equipCost(u.key);
+    const div=document.createElement('div'); div.className='row';
+    div.innerHTML='<div class="ava" style="font-size:18px">'+u.icon+'</div>'+
+      '<div class="info"><b>'+u.name+' <span style="color:#e17055">Lv.'+S.equip[u.key]+'</span></b><span>'+u.desc()+'</span></div>';
+    div.appendChild(actBtn('升级','¥'+fmt(c),'purple',()=>{
+      S.money-=c; S.equip[u.key]++; beep(980,0.09); log('🛠️ 升级：'+u.name+' → Lv.'+S.equip[u.key]); render();
+    }));
+    box.appendChild(div);
+  });
+}
+function renderShops(){
+  const box=$('#shops'); box.innerHTML='';
+  $('#shopHint').textContent=S.isChief?'（已解锁：使劲扩张吧）':'（成为站长后可开店）';
+  SHOPS.forEach(sh=>{
+    const locked=!S.isChief || (sh.key==='cafe' && fav('suqing')<70);
+    const c=shopCost(sh);
+    const div=document.createElement('div'); div.className='row'+(S.shops[sh.key]>0?' owned':'');
+    const inc=sh.inc*(sh.key==='swap'&&sk('swapnet')?1.8:1);
+    div.innerHTML='<div class="ava" style="font-size:18px">'+(locked?'🔒':sh.n.split(' ')[0])+'</div>'+
+      '<div class="info"><b>'+sh.n.split(' ').slice(1).join(' ')+' <span style="color:#e17055">Lv.'+S.shops[sh.key]+'</span></b>'+
+      '<span>'+sh.d+'　当前收入 ¥'+fmt(inc*S.shops[sh.key])+'/秒</span></div>';
+    if(locked){
+      const s=document.createElement('span'); s.style.cssText='font-size:11.5px;color:#95a5a6';
+      s.textContent=sh.key==='cafe'?'苏晴好感≥70':'需先成为站长';
+      div.appendChild(s);
+    } else {
+      div.appendChild(actBtn('投资','¥'+fmt(c),'',()=>{
+        S.money-=c; S.shops[sh.key]++; beep(880,0.1);
+        log('🏬 '+sh.n+' 升到 Lv.'+S.shops[sh.key]);
+        if(sh.key==='cafe') addFav('suqing',5);
+        render();
+      }));
+    }
+    box.appendChild(div);
+  });
+}
+function renderAssets(){
+  const box=$('#assets'); box.innerHTML='';
+  ASSETS.forEach(a=>{
+    const owned=!!S.assets[a.id];
+    const div=document.createElement('div'); div.className='row'+(owned?' owned':'');
+    div.innerHTML='<div class="ava" style="font-size:19px'+(owned?'':' ;background:#f0f0f0')+'">'+a.e+'</div>'+
+      '<div class="info"><b>'+a.n+'</b><span>'+a.d+'</span></div>';
+    if(owned){ const s=document.createElement('span'); s.style.cssText='font-size:12px;color:#00b894;font-weight:700'; s.textContent='已拥有'; div.appendChild(s); }
+    else div.appendChild(actBtn('买入','¥'+fmt(a.cost),'blue',()=>{
+      S.money-=a.cost; S.assets[a.id]=true; beep(880,0.12);
+      log('🏠 买入：'+a.n);
+      if(a.id==='house1') addFav('mom',15);
+      render();
+    }));
+    box.appendChild(div);
+  });
+  const t=document.createElement('div'); t.className='note';
+  t.textContent='净资产（现金 + 名下产业）：¥'+fmt(netWorth());
+  box.appendChild(t);
+}
+function renderAttrs(){
+  const box=$('#attrs'); box.innerHTML='';
+  ATTRS.forEach(a=>{
+    const div=document.createElement('div'); div.className='row';
+    div.innerHTML='<div class="ava" style="font-size:17px">'+a.icon+'</div>'+
+      '<div class="info"><b>'+a.n+' <span style="color:#e17055">'+S.attrs[a.k]+'</span></b><span>'+a.desc+'</span></div>';
+    const btn=document.createElement('button');
+    btn.className='act green'+(S.sp>0?'':' lock');
+    btn.textContent=S.sp>0?'+1（1点）':'技能点不足';
+    btn.onclick=()=>{
+      if(S.sp<=0){ toast('技能点不够——升级或推进剧情能拿到',true); beep(220,0.1,'square',0.06); return; }
+      S.sp--; S.attrs[a.k]++; beep(700,0.08); log('📊 '+a.n+' +1（当前 '+S.attrs[a.k]+'）'); render();
+    };
+    div.appendChild(btn);
+    box.appendChild(div);
+  });
+}
+function renderSkills(){
+  const box=$('#skillTree'); box.innerHTML='';
+  let lastB='';
+  SKILLS.forEach(s=>{
+    if(s.b!==lastB){ lastB=s.b; const h=document.createElement('div'); h.className='branch'; h.textContent='—— '+s.b+' ——'; box.appendChild(h); }
+    const on=sk(s.id);
+    const preOk=!s.pre||sk(s.pre);
+    const lvlOk=S.level>=s.need;
+    const chiefOk=!s.chief||S.isChief;
+    const can=!on&&preOk&&lvlOk&&chiefOk&&S.sp>=s.sp;
+    const div=document.createElement('div');
+    div.className='skill'+(on?' on':'')+((preOk&&lvlOk&&chiefOk)?'':' ban');
+    let req='';
+    if(!lvlOk) req='需等级 '+s.need;
+    else if(!preOk) req='需先点亮「'+SKILLS.find(x=>x.id===s.pre).n+'」';
+    else if(!chiefOk) req='需成为站长';
+    div.innerHTML='<div class="si"><b>'+(on?'✔ ':'')+s.n+' <span style="color:#6c5ce7;font-size:11px">'+s.sp+'点</span></b>'+
+      '<span>'+s.d+'</span>'+(req?'<span class="req">'+req+'</span>':'')+'</div>';
+    const btn=document.createElement('button');
+    btn.className='act purple'+(can?'':' lock');
+    btn.textContent=on?'已点亮':'点亮';
+    btn.onclick=()=>{
+      if(on) return;
+      if(!lvlOk){ toast('等级不够，需要 Lv.'+s.need,true); return; }
+      if(!preOk){ toast('前置技能还没点亮',true); return; }
+      if(!chiefOk){ toast('成为站长后才能修这条线',true); return; }
+      if(S.sp<s.sp){ toast('技能点不够，还差 '+(s.sp-S.sp)+' 点',true); return; }
+      S.sp-=s.sp; S.skills[s.id]=true; chord([659,880]);
+      log('🌳 点亮技能：'+s.n+'（'+s.b+'）');
+      render();
+    };
+    div.appendChild(btn);
+    box.appendChild(div);
+  });
+}
+function favLevel(v){ let n=FAV_LEV[0][1]; FAV_LEV.forEach(f=>{ if(v>=f[0]) n=f[1]; }); return n; }
+function renderChars(){
+  const box=$('#chars'); box.innerHTML='';
+  CHARS.forEach(c=>{
+    const v=fav(c.id), on=v>=c.perk;
+    const div=document.createElement('div'); div.className='char';
+    div.innerHTML='<div class="ch"><div class="ava">'+c.e+'</div>'+
+      '<div><b>'+c.n+'</b><span>'+c.role+'</span></div>'+
+      '<span class="rel">'+favLevel(v)+' · '+Math.round(v)+'</span></div>'+
+      '<div class="favbar"><i style="width:'+clamp(v,0,100)+'%"></i></div>'+
+      '<div class="perk'+(on?' on':'')+'">'+(on?'✔ ':'🔒 ')+c.pt+'</div>';
+    box.appendChild(div);
+  });
+  const t=document.createElement('div'); t.className='note';
+  t.textContent='推进剧情、在事件里做出选择，好感就会变化';
+  box.appendChild(t);
+}
+function renderQuest(){
+  const q=QUESTS[S.quest];
+  const dots=$('#questList'); dots.innerHTML='';
+  QUESTS.forEach((qq,i)=>{
+    const d=document.createElement('span');
+    d.className='qdot'+(i<S.quest?' done':i===S.quest?' cur':'');
+    d.textContent=qq.t.split(' · ')[0];
+    dots.appendChild(d);
+  });
+  if(!q){
+    $('#qName').textContent='主线已完成 ✨ 城市之王';
+    $('#qDesc').textContent='所有章节完结。你可以留在这里，继续把这座城市跑通。';
+    $('#qBarFill').style.width='100%'; $('#qProg').textContent='';
+    const b=$('#claimBtn'); b.className=''; b.textContent='已完成'; b.onclick=null;
+    return;
+  }
+  $('#qName').textContent=q.t;
+  $('#qDesc').textContent=q.d+'　·　奖励：¥'+q.reward;
+  const done=q.cur()>=q.need;
+  $('#qBarFill').style.width=clamp(q.cur()/q.need*100,0,100)+'%';
+  $('#qProg').textContent=f2(q.cur())+' / '+f2(q.need)+'（进度 '+Math.floor(clamp(q.cur()/q.need,0,1)*100)+'%）';
+  const b=$('#claimBtn');
+  b.className=done?'ready':'';
+  b.textContent=done?'📋 领取奖励':'进行中…';
+}
+function f2(n){ return n<10?n.toFixed(1):Math.floor(n).toString(); }
+function render(){ renderTop(); renderRiders(); renderDistricts(); renderUpgs(); renderShops(); renderAssets(); renderAttrs(); renderSkills(); renderChars(); renderQuest(); }
+function tab(id){
+  document.querySelectorAll('.tabBtn').forEach(b=>b.classList.toggle('active',b.dataset.p===id));
+  document.querySelectorAll('.pane').forEach(p=>p.classList.toggle('active',p.id===id));
+}
+
+/* ================= 升级 / 任务 ================= */
+function gainExp(n){
+  S.exp+=n;
+  while(S.exp>=expNeed(S.level)){
+    S.exp-=expNeed(S.level);
+    S.level++; S.sp+=2;
+    chord([523,659,784]);
+    toast('🎉 升到 Lv.'+S.level+'！获得 2 技能点');
+    log('🎉 等级提升到 Lv.'+S.level+'（+2 技能点）');
+  }
+}
+function claimQuest(){
+  const q=QUESTS[S.quest];
+  if(!q) return;
+  if(q.cur()<q.need){ toast('任务还没完成，加油跑单！'); beep(300,0.1,'square'); return; }
+  S.money+=q.reward; S.quest++;
+  chord([523,659,784]);
+  if(q.t.indexOf('站长的椅子')>=0){ S.isChief=true; addFav('zhaozhan',20); log('👔 你成为站长！商业系统解锁'); }
+  if(q.t.indexOf('商业版图')>=0){ S.director=true; log('🌟 晋升区域总监'); }
+  if(q.special){ S.sp+=2; }
+  log('📖 '+q.t+' 完成！奖励 ¥'+q.reward+(q.special?'（+2 技能点）':''));
+  showStory(q.t+'　✅',q.story,[['本世单量',Math.floor(S.lifeOrders)+' 单'],['净资产','¥'+fmt(netWorth())]],null);
+  save(); render();
+}
+
+/* ================= 手动抢单 ================= */
+let grabCd=0;
+function grab(){
+  if(grabCd>0) return;
+  grabCd=1.2;
+  const gain=grabGain();
+  S.money+=gain; S.lifeOrders+=1; S.totalOrders+=1;
+  gainExp(1);
+  beep(700,0.07,'triangle');
+  const btn=$('#grabBtn');
+  btn.classList.add('cd'); setTimeout(()=>btn.classList.remove('cd'),1200);
+  const rect=btn.getBoundingClientRect();
+  const f=document.createElement('div'); f.className='fly';
+  f.textContent='+¥'+fmt(gain);
+  f.style.left=(rect.left+rect.width/2-20+rand(-30,30))+'px';
+  f.style.top=(rect.top-8)+'px';
+  document.body.appendChild(f);
+  setTimeout(()=>f.remove(),900);
+  renderTop();
+}
+
+/* ================= 弹窗 ================= */
+function showStory(title,desc,stats,choices,who){
+  $('#storyTitle').textContent=title;
+  $('#storyDesc').innerHTML=String(desc).replace(/\n/g,'<br>');
+  $('#storyStats').innerHTML=(stats&&stats.length)?stats.map(s=>'<div>'+s[0]+'<b>'+s[1]+'</b></div>').join(''):'';
+  $('#storyWho').textContent=who||'';
+  const cb=$('#storyChoices'); cb.innerHTML='';
+  if(choices&&choices.length){
+    $('#storyOk').classList.add('hidden');
+    choices.forEach(c=>{
+      const b=document.createElement('button'); b.className='choice'; b.textContent=c.t;
+      b.onclick=()=>{ c.fn(); closeStory(); render(); };
+      cb.appendChild(b);
+    });
+  } else $('#storyOk').classList.remove('hidden');
+  $('#storyBox').classList.remove('hidden');
+}
+function closeStory(){ $('#storyBox').classList.add('hidden'); }
+function modalOpen(){ return !$('#evBox').classList.contains('hidden') || !$('#storyBox').classList.contains('hidden'); }
+
+/* ================= 随机事件 ================= */
+function incomeMinute(){ return Math.max(120, income()*55); }
+const EVENTS=[
+  { t:'🌧️ 暴雨爆单', d:'暴雨突袭全城，订单井喷，平台开出双倍补贴。雨很大，路很滑。\n要不要冲？',
+    c:[{t:'冲进雨里！（收入×2，持续60秒；评分 -0.15）',fn(){ addBuff(2,60); S.rating=Math.max(1,S.rating-0.15); log('🌧️ 你在暴雨里狂奔，像当年凌晨三点上线。'); }},
+       {t:'安全第一（评分 +0.1）',fn(){ S.rating=Math.min(5,S.rating+0.1); log('☔ 稳字当头，雨衣穿好，慢慢跑。'); }}]},
+  { t:'📲 需求变更', d:'产品经理转行来当平台调度了：\n「路线规则改了，你的接单策略重构一下，今天上线。」\n熟悉的配方，熟悉的味道。',
+    c:[{t:'接需求，重构！（花 ¥{c}，路径优化算法 +1 级）',cost:()=>incomeMinute()*1.5,pay:1,fn(){ S.equip.algo++; log('🧠 一夜重构，配送效率又上一层——肌肉记忆还在。'); }},
+       {t:'回复「这个需求做不了」',fn(){ log('😤 你淡定地打出五个字：排期不允许。'); }}]},
+];
+/* 上面数组在下方 EVENTS2 合并处理（保持可读） */
+const EVENTS2=[
+  { t:'💔 差评危机', d:'一个客户给了差评：「汤洒了，迟到了，态度还冷淡。」\n平台提示：可以主动赔付消除差评。',
+    c:[{t:'主动赔付（花 ¥{c}，评分 +0.2）',cost:()=>incomeMinute(),pay:1,fn(){ S.rating=Math.min(5,S.rating+0.2); log('🤝 赔付道歉，客户改口：其实人挺好的。'); }},
+       {t:'不理会（评分 -0.3）',fn(){ hurtRating(0.3); log('🙃 你觉得委屈。但数据不会说谎，评分掉了。'); }}]},
+  { t:'🏢 前同事内推', d:'Kevin 发来消息：「哥，新公司成立了，回来吧，帮你内推，职级平移。」\n你看着屏幕，愣了一会儿。',
+    c:[{t:'婉拒：「我现在的 OKR 是单量」',fn(){ S.rating=Math.min(5,S.rating+0.1); addFav('kevin',8); S.sp+=1; log('😊 你笑了笑，把手机揣回兜里，跨上电动车。（+1 技能点）'); }},
+       {t:'认真聊一聊（好感+，但心乱了：收入×0.5 持续 45 秒）',fn(){ addFav('kevin',20); addBuff(0.5,45); log('🫠 你出神了 45 秒。聊完你还是选择留下——只是这次，是认真的。'); }}]},
+  { t:'🚨 竞对平台挖人', d:'对面平台的地推找上你的骑手：「过来吧，单价高一块。」\n骑手看向你。',
+    c:[{t:'加钱留人（花 ¥{c}，收入×1.5 持续 90 秒，团队好感+）',cost:()=>incomeMinute()*1.2,pay:1,fn(){ addBuff(1.5,90); addFav('laowang',10); log('🤝 你咬牙加了补贴，团队士气大振！'); }},
+       {t:'人各有志（收入×0.9 持续 60 秒）',fn(){ addBuff(0.9,60); log('👋 骑手走了。剩下的兄弟跑得更拼了。'); }}]},
+  { t:'📞 妈妈来电', d:'电话响了，是妈：「吃饭了没？别老熬夜跑单。」\n你鼻子有点酸。',
+    c:[{t:'停下来，好好吃顿饭（收入暂停 30 秒，评分 +0.25，妈妈好感+10）',fn(){ addBuff(0.001,30); S.rating=Math.min(5,S.rating+0.25); addFav('mom',10); log('🍚 一碗热汤面。40岁了，还是妈做的饭最香。'); }},
+       {t:'「吃过了妈，忙」——继续跑（收入×1.3 持续 60 秒）',fn(){ addBuff(1.3,60); log('🏃 你撒了个谎，油门拧到底。'); }}]},
+  { t:'🔥 平台高峰补贴', d:'午高峰预警：全城订单井喷，平台追加补贴。',
+    c:[{t:'全员上阵！（收入×1.8 持续 75 秒，评分 -0.1）',fn(){ addBuff(1.8,75); hurtRating(0.1); log('🔥 爆单！站点像发版日的机房一样忙碌。'); }},
+       {t:'只接顺路单（收入×1.2 持续 75 秒）',fn(){ addBuff(1.2,75); log('😌 老师傅的选择：稳。'); }}]},
+  { t:'🧑‍🎓 徒弟拜师', d:'兼职学生小林问：「哥，你跑单怎么这么快？有什么诀窍？」\n你想起当年带应届生的自己。',
+    c:[{t:'倾囊相授（花 ¥{c}，路径优化算法 +1 级，小林好感+15）',cost:()=>incomeMinute()*1.6,pay:1,fn(){ S.equip.algo++; addFav('xiaolin',15); log('🎓 你画了张路线图：「先背街区，再优化路径，跟背八股文一样。」'); }},
+       {t:'「多跑就知道了」',fn(){ addFav('xiaolin',-5); log('🙂 你拍拍他肩膀，深藏功与名。'); }}]},
+  { t:'📱 系统升级通知', d:'平台 App 大版本更新，派单算法重新调参。站长群里哀嚎一片。',
+    c:[{t:'连夜研究新规则（花 ¥{c}，口碑经营 +1 级）',cost:()=>incomeMinute()*2,pay:1,fn(){ S.equip.brand++; log('📖 你通宵读完更新日志——像当年读源码一样。'); }},
+       {t:'等别人踩坑再说',fn(){ log('😌 你选择观望。老兵从不打无准备的仗。'); }}]},
+  { t:'🏆 站长表彰', d:'月度大会，老赵点名表扬你：「这位老哥，40岁转行，单量全站前三。」',
+    c:[{t:'上台说两句（评分 +0.2，收入×1.4 持续 60 秒，老赵好感+12）',fn(){ S.rating=Math.min(5,S.rating+0.2); addBuff(1.4,60); addFav('zhaozhan',12); log('🎤 「以前我优化代码，现在我优化路线。都是手艺活。」'); }},
+       {t:'低调摆手（收入×1.15 持续 60 秒）',fn(){ addBuff(1.15,60); log('😊 你摆摆手，转身又跨上了车。'); }}]},
+  { t:'☕ 便利店的灯', d:'凌晨一点，只有便利店还亮着灯。苏晴在柜台后面冲你招手：「又这么晚？给你留了关东煮。」',
+    c:[{t:'坐下吃完再走（收入×0.6 持续 40 秒，苏晴好感+12）',fn(){ addBuff(0.6,40); addFav('suqing',12); log('☕ 便利店的灯下，你们聊到凌晨。原来她也是一个人在这座城市。'); }},
+       {t:'打包带走，还有三单（苏晴好感+4，收入×1.2 持续 40 秒）',fn(){ addFav('suqing',4); addBuff(1.2,40); log('🍢 关东煮挂在车把上，热乎的。'); }}]},
+  { t:'🏍️ 飞哥的挑衅', d:'路口红灯，飞哥停在旁边：「老哥，听说你要冲单王？这个位置，我坐了两年。」',
+    c:[{t:'「那就各凭本事」（派单量临时+20%，持续 90 秒）',fn(){ addBuff(1.2,90); addFav('feige',-3); log('🏍️ 绿灯一亮，两台车同时冲出去。'); }},
+       {t:'「前辈多指教」（飞哥好感+12，他教你几条近道）',fn(){ addFav('feige',12); S.attrs.memo+=1; log('🧭 飞哥愣了一下，笑了：「行，教你几条近道。」（路线记忆 +1）'); }}]},
+];
+const ALL_EVENTS=EVENTS.concat(EVENTS2);
+let evTimer=null, evLeft=0, evCur=null;
+function addBuff(mult,sec){ S.buffs.push({mult,until:Date.now()+sec*1000}); }
+function hurtRating(v){ const cut=fav('mom')>=60?0.5:1; S.rating=Math.max(1,S.rating-v*cut); }
+function fireEvent(){
+  evCur=pick(ALL_EVENTS);
+  $('#evTitle').textContent=evCur.t;
+  $('#evDesc').textContent=evCur.d;
+  const box=$('#evChoices'); box.innerHTML='';
+  evCur.c.forEach(c=>{
+    let t=c.t, cost=null;
+    if(c.cost){ cost=Math.round(c.cost()); t=t.replace('{c}',fmt(cost)); }
+    const btn=document.createElement('button');
+    btn.className='choice'+(cost&&S.money<cost?' poor':'');
+    btn.textContent=t+(cost&&S.money<cost?'（还差 ¥'+fmt(cost-S.money)+'）':'');
+    btn.onclick=()=>{
+      if(cost){ if(S.money<cost){ toast('还差 ¥'+fmt(cost-S.money)+'——先跑几单',true); return; } S.money-=cost; }
+      c.fn(); closeEvent(); render();
+    };
+    box.appendChild(btn);
+  });
+  $('#evBox').classList.remove('hidden');
+  evLeft=20;
+  beep(520,0.12,'triangle');
+  clearInterval(evTimer);
+  evTimer=setInterval(()=>{
+    evLeft-=0.1;
+    $('#evCd').style.width=clamp(evLeft/20*100,0,100)+'%';
+    if(evLeft<=0){
+      const c=evCur.c[0];
+      if(c.cost){
+        const cost=Math.round(c.cost());
+        if(S.money>=cost) S.money-=cost; else { log('⏰ 犹豫太久，机会溜走了。'); closeEvent(); render(); return; }
+      }
+      c.fn(); log('⏰ 你犹豫了一下，顺从了本能。'); closeEvent(); render();
+    }
+  },100);
+}
+function closeEvent(){ clearInterval(evTimer); $('#evBox').classList.add('hidden'); }
+
+/* ================= 角色剧情线 ================= */
+const ARC=[
+  { id:'su1', who:'☕ 苏晴', cond:()=>S.lifeOrders>=3,
+    t:'雨夜，一把伞', d:'暴雨。你浑身湿透冲进便利店躲雨，柜台后的女人抬头看了你一眼，递过一条毛巾：\n「擦擦吧，别感冒了——你看起来不像干这行的。」',
+    c:[{t:'「四十岁，刚失业。」（如实说）',fn(){ addFav('suqing',12); log('☕ 她没追问，只是把关东煮多给你加了两个鱼丸。'); }},
+       {t:'「体验生活。」（笑着糊弄过去）',fn(){ addFav('suqing',6); S.sp+=1; log('☕ 她笑了：「程序员体验生活跑到送外卖？你们城里人真会玩。」'); }}]},
+  { id:'lw1', who:'👨‍🦲 老王', cond:()=>S.riders.length>=2,
+    t:'烧烤摊上的兄弟', d:'收工后老王拉你去路边摊：「头儿，跟我说实话，你是不是在公司干过管理？」\n你愣住：「你怎么看出来的？」\n「你派单的时候，眼里有表格。」',
+    c:[{t:'「带过二十人团队。」（坦白）',fn(){ addFav('laowang',15); log('🍢 老王举杯：「那我跟你干了。」'); }},
+       {t:'「你想多了。」',fn(){ addFav('laowang',5); log('🍢 老王嘿嘿一笑，没再问。'); }}]},
+  { id:'fg1', who:'🏍️ 飞哥', cond:()=>S.lifeOrders>=15,
+    t:'单王的警告', d:'站点公告栏前，上届单王飞哥把头盔往桌上一放：「新人，单王不是靠拼命拼出来的，是靠脑子。你四十了，别把腰跑废了。」',
+    c:[{t:'「我跑给你看。」',fn(){ addFav('feige',-5); addBuff(1.25,90); log('🏍️ 飞哥挑挑眉：「行，我等着。」（收入×1.25 持续 90 秒）'); }},
+       {t:'「那你教教我？」',fn(){ addFav('feige',14); S.attrs.memo+=1; log('🧭 飞哥沉默两秒，掏出手机发了你一份「全城近道地图」。（路线记忆 +1）'); }}]},
+  { id:'mom1', who:'👵 妈妈', cond:()=>S.lifeOrders>=25,
+    t:'电话里的雨声', d:'妈在电话那头问：「你那边怎么有雨声？你不是说在办公室加班吗？」\n你张了张嘴，一个字也说不出来。',
+    c:[{t:'坦白一切',fn(){ addFav('mom',20); S.attrs.calm+=1; log('👵 妈沉默了很久，只说：「那你慢点骑车。」（抗压 +1）'); }},
+       {t:'「妈，办公室在装修。」（继续瞒着）',fn(){ addFav('mom',-8); addBuff(1.3,60); log('🏃 挂了电话，你拧满油门，把愧疚甩在风里。'); }}]},
+  { id:'xl1', who:'🧑‍🎓 小林', cond:()=>S.lifeOrders>=40,
+    t:'一个年轻人', d:'兼职大学生小林在路边修车，链条掉了三次。你蹲下来帮他装好，他红着脸：「哥，我一个月房租还没着落……」',
+    c:[{t:'「跟我跑，我教你。」',fn(){ addFav('xiaolin',25); if(S.riders.length<maxRiders()){ S.riders.push({name:'小林',emoji:'🧑‍🎓',lvl:1}); log('🤝 小林加入团队（免费骑手）'); } else { S.money+=300; log('🤝 名额满了，小林先给你当助手（+¥300）'); } }},
+       {t:'「方法我说了，剩下的靠自己。」',fn(){ addFav('xiaolin',8); S.sp+=1; log('🧑‍🎓 小林认真点头。（+1 技能点）'); }}]},
+  { id:'sq2', who:'☕ 苏晴', cond:()=>S.lifeOrders>=50,
+    t:'凌晨一点的热饭', d:'凌晨一点你还没收工，便利店的灯亮着。苏晴把盒饭推过来：「吃。你们程序员是不是都这么不要命？」\n你抬头：「你怎么知道我是程序员？」\n「你算路线的时候，手指在桌上敲——像在敲键盘。」',
+    c:[{t:'「我写了十八年代码。」',fn(){ addFav('suqing',18); log('☕ 她坐下来：「那你一定很聪明。可惜，聪明人也会饿。」'); }},
+       {t:'（低头吃饭，什么也没说）',fn(){ addFav('suqing',10); addBuff(1.35,120); log('🍚 那顿饭你吃得很慢。吃完你又跑了三单。（收入×1.35 持续120秒）'); }}]},
+  { id:'zz1', who:'🧔 老赵', cond:()=>S.lifeOrders>=65,
+    t:'站长的茶', d:'老赵把你叫进办公室，推过来一杯茶：「站点这个月单量翻了一倍，是你带起来的。我没看错人。」',
+    c:[{t:'「是兄弟们跑得好。」',fn(){ addFav('zhaozhan',18); addFav('laowang',10); log('🧔 老赵点点头，没说话，但眼神不一样了。'); }},
+       {t:'「我想做得更大。」',fn(){ addFav('zhaozhan',10); S.sp+=2; log('🧔 老赵笑了：「年轻人……哦不，老伙计，你野心不小。」（+2 技能点）'); }}]},
+  { id:'fg2', who:'🏍️ 飞哥', cond:()=>S.lifeOrders>=78,
+    t:'暴雨里的对手', d:'单王冲刺夜，暴雨。你的车在半路没电了。雨里一辆摩托停在你身边——是飞哥。\n「上车，我帮你送最后三单。」\n「为什么帮我？」\n「因为我不想赢一个没电的人。」',
+    c:[{t:'上车，一起送完',fn(){ addFav('feige',25); log('🏍️ 那一夜，你们两个在雨里跑遍了大半个城市。'); }},
+       {t:'「我自己能行。」',fn(){ addFav('feige',-5); S.attrs.stam+=2; log('💪 你推着车在雨里走了两公里。（体力 +2）'); }}]},
+  { id:'sq3', who:'☕ 苏晴', cond:()=>S.isChief,
+    t:'咖啡店', d:'你成为站长那天，苏晴在便利店门口等你，手里拎着一个小蛋糕。\n「恭喜赵站长。」她顿了顿，「我一直想自己开家咖啡店，就是……没本钱，也没胆子。」',
+    c:[{t:'「我们一起开。钱我出，店你管。」',fn(){ addFav('suqing',25); S.money=Math.max(0,S.money-6000); S.shops.cafe=Math.max(1,S.shops.cafe); log('☕ 「苏晴的咖啡店」开张了！（-¥6000，咖啡店 Lv.1）'); }},
+       {t:'「我借你钱，你自己干。」（给 ¥3000）',fn(){ S.money=Math.max(0,S.money-3000); addFav('suqing',12); S.sp+=1; log('☕ 她收下了，说会还你。（+1 技能点）'); }}]},
+  { id:'mom2', who:'👵 妈妈', cond:()=>!!S.assets.house1,
+    t:'新房子的第一晚', d:'妈从老家过来，在空荡荡的客厅里转了一圈，摸摸墙，摸摸窗。\n「这么大房子，就你一个人住？」\n你说：「不一个人了。」',
+    c:[{t:'「我有喜欢的人了。」',fn(){ addFav('mom',15); addFav('suqing',10); log('👵 妈笑了，眼里有泪：「带回来给我看看。」'); }},
+       {t:'「以后会有的。」',fn(){ addFav('mom',8); S.attrs.calm+=1; log('👵 妈说：「不急，妈等得起。」'); }}]},
+];
+function checkArc(){
+  if(modalOpen()) return;
+  for(const a of ARC){
+    if(!S.storyDone[a.id] && a.cond()){
+      S.storyDone[a.id]=true;
+      beep(600,0.12,'triangle');
+      showStory(a.t,a.d,null,a.c.map(c=>({t:c.t,fn:()=>{ c.fn(); log('📖 剧情：'+a.t); }}))||null,a.who);
+      save();
+      return;
+    }
+  }
+}
+
+/* ================= 主循环 ================= */
+let started=false;
+let lastTick=Date.now(), saveAcc=0, driftAcc=0, renderAcc=0, arcAcc=0, lowWarn=false;
+function tick(){
+  if(!started) return;
+  const now=Date.now();
+  const dt=Math.min(1,(now-lastTick)/1000);
+  lastTick=now;
+  const rate=actualRate();
+  S.money+=(orderIncome()+passiveIncome())*dt;
+  S.lifeOrders+=rate*dt;
+  S.totalOrders+=rate*dt;
+  gainExp(rate*dt);
+  /* 时段 */
+  S.slotT-=dt;
+  if(S.slotT<=0){ S.slotT=75; S.slot=(S.slot+1)%SLOTS.length; log('🕐 进入'+SLOTS[slot()].n+'（派单 ×'+SLOTS[slot()].sup.toFixed(2)+'，单价 ×'+SLOTS[slot()].pay+'）'); }
+  /* 评分恢复 */
+  driftAcc+=dt;
+  if(driftAcc>25){ driftAcc=0; if(S.rating<5) S.rating=Math.min(5,S.rating+0.015*(sk('words')?2.2:1)*(1+0.4*S.attrs.talk)); }
+  if(S.rating<3.2&&!lowWarn){ lowWarn=true; toast('⚠️ 评分过低！派单量和收入都会掉，事件里注意评分选择',true); beep(200,0.4,'sawtooth'); }
+  if(S.rating>=3.6) lowWarn=false;
+  /* 剧情（仅按进度条件触发，不再随机弹窗） */
+  arcAcc+=dt;
+  if(arcAcc>2){ arcAcc=0; checkArc(); }
+  /* 存档与刷新 */
+  saveAcc+=dt;
+  if(saveAcc>10){ saveAcc=0; save(); }
+  renderAcc+=dt;
+  if(renderAcc>1){ renderAcc=0; render(); } else renderTop();
+}
+setInterval(tick,250);
+document.addEventListener('visibilitychange',()=>{ if(document.hidden) save(); });
+window.addEventListener('beforeunload',save);
+
+/* ================= 启动 ================= */
+(function init(){
+  const loaded=load();
+  S=loaded||newSave();
+  S._returning=!!loaded;
+  render();
+  buildStart();
+})();
+
+function buildStart(){
+  const box=$('#startBtns');
+  if(S._returning){
+    box.innerHTML='<button class="primary" onclick="beginGame(false)">继续游戏</button>'+
+                  '<button class="ghost" onclick="beginGame(true)">重新开局（清空存档）</button>';
+    $('#startSub').textContent='检测到本机存档，可继续上次的进度。';
+  }else{
+    box.innerHTML='<button class="primary" onclick="beginGame(false)">开始游戏</button>';
+    $('#startSub').textContent='被裁码农 → 外卖单王 → 站长 → 创业老板';
+  }
+}
+
+function beginGame(isNew){
+  if(isNew){ localStorage.removeItem(SAVE_KEY); S=newSave(); S._returning=false; }
+  started=true;
+  $('#startScreen').classList.add('hidden');
+  if(!S._returning){
+    log('📖 2026年，你40岁，工号0037。昨天还在写祖传代码，今天 HR 的名单上有你。');
+    log('🛵 你注册成为骑手。跟着顶部主线走：跑单 → 单王 → 站长 → 开店 → 投资。');
+    toast('跟着顶部主线剧情走起 →');
+  }else{
+    log('👋 欢迎回来！本世 '+Math.floor(S.lifeOrders)+' 单 · '+(QUESTS[S.quest]?QUESTS[S.quest].t:'主线已完成'));
+    if((Date.now()-S.lastSave)>60000){
+      const away=clamp((Date.now()-S.lastSave)/1000,0,7200);
+      const earn=income()*0.5*away, orders=actualRate()*0.5*away;
+      S.money+=earn; S.lifeOrders+=orders; S.totalOrders+=orders; gainExp(orders*0.5);
+      showStory('🌙 你不在的这段时间……','你离开的 '+Math.round(away/60)+' 分钟里，团队帮你把单跑着。\n离线收益按 50% 结算（最多 2 小时）。',
+        [['离线单量','+'+fmt(orders)+' 单'],['离线收入','+¥'+fmt(earn)]]);
+      log('🌙 离线收益：+'+fmt(orders)+' 单，+¥'+fmt(earn));
+    }
+  }
+  render();
+}
+</script>
+</body>
+</html>

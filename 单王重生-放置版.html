@@ -132,6 +132,8 @@
   .stambar i { display:block; height:100%; width:100%; background:#00b894; border-radius:7px; transition:width .4s; }
   .btnrow { display:flex; gap:9px; flex-wrap:wrap; }
   .btnrow .act { flex:1; min-width:106px; margin:0; }
+  #dayBar { height:5px; background:rgba(255,255,255,.16); border-radius:3px; overflow:hidden; margin-top:8px; }
+  #dayFill { display:block; height:100%; width:0%; background:#74b9ff; transition:width .3s; }
   #debtBar { margin-top:9px; padding:9px 12px; border-radius:10px; background:rgba(214,48,49,.18); border:1px solid rgba(214,48,49,.5); color:#ff9f9f; font-size:12.5px; font-weight:700; }
   #debtBar.hidden { display:none; }
   #debtBar b { color:#ff7675; }
@@ -197,6 +199,7 @@
     <span class="stat" id="uiTime" style="font-size:12px;color:#dfe6e9">🕐 上午平峰</span>
   </div>
   <div class="row2" id="uiSupply"></div>
+  <div id="dayBar" title="一天 24 小时的进度"><i id="dayFill"></i></div>
   <div id="debtBar" class="hidden">⚠️ <b>账上已经是负数！</b> 剩 <b id="debtLeft">90 秒</b> 转正，否则破产清算 —— 快去收工休息 / 卖资产 / 提高收入<div id="debtBar2"><i id="debtFill"></i></div></div>
   <div id="rankWrap">
     <div class="lbl"><span id="uiRankNext"></span><span id="uiOrdersToKing"></span></div>
@@ -232,31 +235,31 @@
   <!-- 跑单 -->
   <div class="pane active" id="p1">
     <div class="card">
-      <h3>💪 体力管理 <small id="stamHint"></small></h3>
+      <h3>💪 体力管理 <small id="stamHint"></small> <small>面 0.5h / 咖啡 0.3h / 睡觉 8h</small></h3>
       <div id="stamBar2" class="stambar"><i></i></div>
       <div id="stamBtns" class="btnrow"></div>
     </div>
     <div style="height:13px"></div>
     <div class="grid2">
       <div class="card">
-        <h3>🛵 骑手团队 <small>运力来源</small></h3>
+        <h3>🛵 骑手团队 <small>运力来源 · 升级 1h / 招募 2h</small></h3>
         <div id="riders"></div>
       </div>
       <div class="card">
-        <h3>🗺️ 商圈与口碑 <small>派单来源</small></h3>
+        <h3>🗺️ 商圈与口碑 <small>派单来源 · 开通 3h</small></h3>
         <div id="districts"></div>
       </div>
     </div>
     <div style="height:13px"></div>
     <div class="grid2">
       <div class="card">
-        <h3>⚙️ 装备与技术</h3>
+        <h3>⚙️ 装备与技术 <small>升级 1.5h</small></h3>
         <div id="upgs"></div>
       </div>
       <div class="card">
         <h3>⚡ 手动抢单</h3>
         <button id="grabBtn" onclick="grab()">接 一 单 ！</button>
-        <div class="note">手动抢一单 ≈ ¥<b id="grabPay">18</b>，还能涨经验。冷却 1.2 秒。</div>
+        <div class="note">手动抢一单 ≈ ¥<b id="grabPay">18</b>，还能涨经验。冷却 1.2 秒。<br>⏳ 抢单要花 <b>0.3 小时</b>，一天满打满算也就 80 单。</div>
       </div>
     </div>
   </div>
@@ -264,12 +267,12 @@
   <!-- 商业 -->
   <div class="pane" id="p2">
     <div class="card">
-      <h3>🏬 我的店铺 <small id="shopHint"></small></h3>
+      <h3>🏬 我的店铺 <small id="shopHint"></small> <small>开店/升级 4h</small></h3>
       <div id="shops"></div>
     </div>
     <div style="height:13px"></div>
     <div class="card">
-      <h3>🏠 资产与投资 <small>买了就是被动收入，还能涨属性</small></h3>
+      <h3>🏠 资产与投资 <small>买入 6h（看房 + 办手续）</small></h3>
       <div id="assets"></div>
     </div>
     <div style="height:13px"></div>
@@ -282,12 +285,12 @@
   <!-- 技能 -->
   <div class="pane" id="p3">
     <div class="card">
-      <h3>📊 个人属性 <small>每点消耗 1 技能点（升级 / 剧情都能拿技能点）</small></h3>
+      <h3>📊 个人属性 <small>每点消耗 1 技能点 + 0.5 小时</small></h3>
       <div id="attrs"></div>
     </div>
     <div style="height:13px"></div>
     <div class="card">
-      <h3>🌳 技能树 <small>三条流派，点亮后永久生效</small></h3>
+      <h3>🌳 技能树 <small>三条流派 · 点亮 1h</small></h3>
       <div id="skillTree"></div>
     </div>
   </div>
@@ -386,11 +389,16 @@ const SLOTS=[
   {n:'晚高峰',icon:'🌆',sup:2.1,pay:1.35},{n:'夜宵档',icon:'🍢',sup:1.3,pay:1.2},
 ];
 const ATTRS=[
-  {k:'stam', n:'体力',   icon:'💪',desc:'每点：团队配送效率 +3%'},
-  {k:'drive',n:'车技',   icon:'🛵',desc:'每点：手动抢单收益 +20%'},
-  {k:'memo', n:'路线记忆',icon:'🗺️',desc:'每点：平台派单量 +7%'},
-  {k:'talk', n:'沟通',   icon:'🗣️',desc:'每点：小费倍率 +6%、评分恢复 +40%'},
-  {k:'calm', n:'抗压',   icon:'🧘',desc:'每点：负面事件损失 -12%'},
+  {k:'stam',   n:'体力',    icon:'💪',desc:'每点：团队效率 +3%、体力上限 +8、消耗 -4.5%'},
+  {k:'logic',  n:'算法思维', icon:'🧠',desc:'每点：全队配送效率 +4%'},
+  {k:'drive',  n:'车技',    icon:'🛵',desc:'每点：手动抢单收益 +20%'},
+  {k:'memo',   n:'路线记忆', icon:'🗺️',desc:'每点：平台派单量 +7%'},
+  {k:'talk',   n:'沟通',    icon:'🗣️',desc:'每点：小费倍率 +6%、评分恢复 +40%'},
+  {k:'grit',   n:'韧性',    icon:'🧘',desc:'每点：透支损失 -15%、破产宽限 +5 秒'},
+  {k:'sense',  n:'财商',    icon:'💰',desc:'每点：固定支出 -3.5%、被动收入 +2%'},
+  {k:'network',n:'人脉',    icon:'🤝',desc:'每点：骑手工资 -5%、招募费 -6%'},
+  {k:'handy',  n:'动手能力', icon:'🛠️',desc:'每点：装备升级 -6%、车电 -8%'},
+  {k:'time',   n:'时间管理', icon:'⏰',desc:'每点：时段加成 +8%（高峰更赚、低谷没那么惨）'},
 ];
 const SKILLS=[
   {id:'pace',   b:'速度流',n:'老司机步频', d:'团队配送效率 +18%',        need:2, sp:1},
@@ -479,7 +487,8 @@ function newSave(){
   return {
     money:200, lifeOrders:0, totalOrders:0, rating:5.0,
     level:1, exp:0, sp:1,
-    attrs:{stam:0,drive:0,memo:0,talk:0,calm:0},
+    attrs:{stam:0,logic:0,drive:0,memo:0,talk:0,grit:0,sense:0,network:0,handy:0,time:0},
+    day:1, hour:8, today:{orders:0,income:0,cost:0},
     skills:{},
     riders:[{...YOU,lvl:1}],
     equip:{scooter:0,algo:0,brand:0,coach:0},
@@ -499,6 +508,10 @@ function load(){
     const def=newSave();
     for(const k in def) if(d[k]===undefined) d[k]=def[k];
     for(const k in def.attrs) if(d.attrs[k]===undefined) d.attrs[k]=0;
+    if(d.attrs.calm){ d.attrs.grit=(d.attrs.grit||0)+d.attrs.calm; delete d.attrs.calm; }  /* 抗压已废，点数转入韧性 */
+    if(typeof d.day!=='number') d.day=1;
+    if(typeof d.hour!=='number') d.hour=8;
+    if(!d.today) d.today={orders:0,income:0,cost:0};
     for(const k in def.shops) if(d.shops[k]===undefined) d.shops[k]=0;
     for(const k in def.chars) if(d.chars[k]===undefined) d.chars[k]=0;
     d.buffs=Array.isArray(d.buffs)?d.buffs.filter(b=>b&&typeof b.mult==='number'&&b.until>Date.now()):[];
@@ -533,6 +546,7 @@ function teamEff(){
   let m=1;
   m*=Math.pow(1.15,S.equip.algo);
   m*=1+0.03*S.attrs.stam;
+  m*=1+0.04*(S.attrs.logic||0);
   m*=1+0.05*S.shops.ebike;
   if(sk('pace')) m*=1.18;
   if(sk('dualbatt')) m*=1.25;
@@ -543,13 +557,22 @@ function teamEff(){
 }
 function capacity(){ return S.riders.reduce((s,r)=>s+0.12*r.lvl,0)*teamEff()*stamMult()*(S.resting?0:1); }
 /* —— 派单：平台每秒给你多少单 —— */
+function slotBonus(){ return 0.08*(S.attrs.time||0); }
+function slotSup(){
+  const v=SLOTS[slot()].sup, b=slotBonus();
+  return v>=1 ? 1+(v-1)*(1+b) : v+(1-v)*b;
+}
+function slotPay(){
+  const v=SLOTS[slot()].pay, b=slotBonus();
+  return v>=1 ? 1+(v-1)*(1+b) : v+(1-v)*b;
+}
 function supplyRate(){
   let s=0.42;
   for(let i=1;i<=S.districts;i++) s+=DISTRICTS[i-1].supply;
   s*=1+0.07*S.attrs.memo;
   s*=1+0.08*S.equip.brand;
   s*=0.6+S.rating*0.09;
-  s*=SLOTS[slot()].sup;
+  s*=slotSup();
   s*=1+0.07*S.shops.swap;
   if(sk('smile')) s*=1.18;
   if(sk('rec')) s*=1.35;
@@ -559,7 +582,55 @@ function supplyRate(){
   return s;
 }
 function actualRate(){ return Math.min(capacity(),supplyRate()); }
-function slot(){ return S.slot % SLOTS.length; }
+function slot(){ return slotByHour(S.hour||0); }
+
+/* ================= 游戏内时钟 ================= */
+const HOUR_SEC=12;                       /* 现实 12 秒 = 游戏 1 小时；一天约 4.8 分钟 */
+function slotByHour(h){
+  h=((h%24)+24)%24;
+  if(h<6)  return 0;                     /* 凌晨低谷 */
+  if(h<10) return 1;                     /* 上午平峰 */
+  if(h<13) return 2;                     /* 午高峰   */
+  if(h<17) return 3;                     /* 下午平峰 */
+  if(h<20) return 4;                     /* 晚高峰   */
+  return 5;                              /* 夜宵档   */
+}
+function slotEndHour(h){
+  h=((h%24)+24)%24;
+  if(h<6) return 6; if(h<10) return 10; if(h<13) return 13;
+  if(h<17) return 17; if(h<20) return 20; return 24;
+}
+function clockText(){
+  const hh=((S.hour||0)%24+24)%24;
+  const h=Math.floor(hh), m=Math.floor((hh%1)*60);
+  return (h<10?'0':'')+h+':'+(m<10?'0':'')+m;
+}
+function advanceClock(h){
+  S.hour=(S.hour||0)+h;
+  let guard=0;
+  while(S.hour>=24 && guard<400){ S.hour-=24; newDay(); guard++; }
+  while(S.hour<0 && guard<400){ S.hour+=24; S.day=Math.max(1,(S.day||1)-1); guard++; }
+}
+function newDay(){
+  S.day=(S.day||1)+1;
+  const d=S.today||{orders:0,income:0,cost:0};
+  const net=d.income-d.cost;
+  log('📅 第 '+S.day+' 天。昨日 '+Math.floor(d.orders)+' 单，收入 ¥'+fmt(d.income)+
+      '，支出 ¥'+fmt(d.cost)+'，净 '+(net>=0?'+':'-')+'¥'+fmt(net>=0?net:-net));
+  S.today={orders:0,income:0,cost:0};
+  toast('📅 第 '+S.day+' 天开始了');
+  beep(660,0.16,'triangle');
+}
+/* 办事消耗时间：这段时间人在外面跑手续，不送单，只结算被动收入与支出 */
+function spendTime(h,label){
+  const secs=h*HOUR_SEC;
+  const gain=passiveIncome()*secs, cost=upkeep()*secs;
+  S.money+=gain-cost;
+  if(S.today){ S.today.income+=gain; S.today.cost+=cost; }
+  S.stam=Math.min(stamMax(),(S.stam||0)+stamRegen()*secs*0.5);
+  advanceClock(h);
+  if(label) log('⏳ '+label+'　耗时 '+h+' 小时（这期间没跑单）');
+}
 function payPerOrder(){ return 6+S.equip.scooter*2; }
 function brandMult(){ return Math.pow(1.25,S.equip.brand)*(1+0.06*S.attrs.talk); }
 function ratingMult(){ return 0.5+S.rating*0.1; }
@@ -572,7 +643,7 @@ function buffMult(){
 function vipMult(){ return sk('vip')?1.18:1; }
 function kevinMult(){ return fav('kevin')>=50?1.08:1; }
 function orderIncome(){
-  return actualRate()*payPerOrder()*brandMult()*ratingMult()*charMult()*buffMult()*vipMult()*kevinMult()*SLOTS[slot()].pay;
+  return actualRate()*payPerOrder()*brandMult()*ratingMult()*charMult()*buffMult()*vipMult()*kevinMult()*slotPay();
 }
 function passiveBase(){
   let p=0;
@@ -589,6 +660,7 @@ function passiveBase(){
 }
 function passiveIncome(){
   let p=passiveBase();
+  p*=1+0.02*(S.attrs.sense||0);
   if(sk('manage')) p*=1.30;
   if(sk('capital')) p*=1.60;
   if(S.assets.store) p*=1.12;
@@ -640,16 +712,17 @@ function stamStateText(){
 /* ================= 支出与净收入 ================= */
 function upkeep(){                          /* 每秒固定支出 */
   let u=0.18;                               /* 生活开销：房租 + 吃饭 + 话费 */
-  S.riders.forEach(function(r,i){ if(i>0) u+=0.12+0.09*r.lvl; });  /* 骑手工资（自己不给自己发工资） */
+  const wageCut=Math.pow(0.95,(S.attrs.network||0));
+  S.riders.forEach(function(r,i){ if(i>0) u+=(0.12+0.09*r.lvl)*wageCut; });  /* 骑手工资（自己不给自己发工资） */
   for(const k in S.shops) u+=S.shops[k]*1.10;             /* 店铺运维 */
   ASSETS.forEach(function(a){ if(S.assets[a.id]) u+=(a.up||1.2); });  /* 资产维护 */
-  u+=capacity()*0.45;                       /* 车电 / 车辆损耗 */
-  if((S.stam||0)<=0.5) u+=0.60;             /* 体力透支：看病 / 罚款 */
-  return u*(1+0.06*(S.debtCount||0));
+  u+=capacity()*0.45*Math.pow(0.92,(S.attrs.handy||0));   /* 车电 / 车辆损耗 */
+  if((S.stam||0)<=0.5) u+=0.60*Math.pow(0.85,(S.attrs.grit||0));   /* 体力透支：看病 / 罚款 */
+  return u*(1+0.06*(S.debtCount||0))*Math.pow(0.965,(S.attrs.sense||0));
 }
 function netIncome(){ return income()-upkeep(); }
 function grabGain(){
-  return payPerOrder()*3*brandMult()*ratingMult()*charMult()*buffMult()*vipMult()*kevinMult()*SLOTS[slot()].pay*
+  return payPerOrder()*3*brandMult()*ratingMult()*charMult()*buffMult()*vipMult()*kevinMult()*slotPay()*
     (1+0.2*S.attrs.drive)*(sk('shortcut')?1.6:1);
 }
 function assetCount(){ return ASSETS.filter(a=>S.assets[a.id]).length; }
@@ -658,7 +731,7 @@ function assetValue(){
     + SHOPS.reduce((s,sh)=>{ let v=0; for(let i=0;i<S.shops[sh.key];i++) v+=Math.round(sh.base*Math.pow(1.85,i)); return s+v; },0);
 }
 function netWorth(){ return S.money+assetValue(); }
-function hireCost(i){ return Math.round(50*Math.pow(2.2,i)); }
+function hireCost(i){ return Math.round(50*Math.pow(2.2,i)*Math.pow(0.94,(S.attrs.network||0))); }
 function riderUpCost(r,i){
   const disc=Math.pow(0.92,S.equip.coach)*(sk('supply')?0.82:1)*(fav('xiaolin')>=50?0.90:1);
   return Math.round(25*Math.pow(1.45,r.lvl-1)*(i+1)*disc);
@@ -666,7 +739,7 @@ function riderUpCost(r,i){
 function equipCost(k){
   const base={scooter:50,algo:120,brand:140,coach:200}[k];
   const fac ={scooter:1.65,algo:1.85,brand:1.9,coach:2.3}[k];
-  return Math.round(base*Math.pow(fac,S.equip[k]));
+  return Math.round(base*Math.pow(fac,S.equip[k])*Math.pow(0.94,(S.attrs.handy||0)));
 }
 function shopCost(sh){ return Math.round(sh.base*Math.pow(1.85,S.shops[sh.key])); }
 
@@ -705,9 +778,9 @@ function renderStam(){
   ab.onclick=function(){ S.autoRest=!S.autoRest; log('🤖 自动休息已'+(S.autoRest?'开启':'关闭')); render(); };
   box.appendChild(ab);
   const items=[
-    {n:'🍚 吃碗面',c:60,f:function(){ S.stam=Math.min(stamMax(),(S.stam||0)+22); log('🍚 一碗热汤面下肚，缓过来了。（体力 +22）'); }},
-    {n:'☕ 来杯咖啡',c:120,f:function(){ S.stam=Math.min(stamMax(),(S.stam||0)+38); addBuff(1.25,45); log('☕ 咖啡下肚，精神一振。（体力 +38，收入 ×1.25 持续 45 秒）'); }},
-    {n:'💤 睡一觉',c:300,f:function(){ S.stam=stamMax(); S.rating=Math.min(5,S.rating+0.15); log('💤 睡了八小时。醒来天亮了，浑身是劲。（体力全满，评分 +0.15）'); }}
+    {n:'🍚 吃碗面',c:60,h:0.5,f:function(){ S.stam=Math.min(stamMax(),(S.stam||0)+22); log('🍚 一碗热汤面下肚，缓过来了。（体力 +22）'); }},
+    {n:'☕ 来杯咖啡',c:120,h:0.3,f:function(){ S.stam=Math.min(stamMax(),(S.stam||0)+38); addBuff(1.25,45); log('☕ 咖啡下肚，精神一振。（体力 +38，收入 ×1.25 持续 45 秒）'); }},
+    {n:'💤 睡一觉',c:300,h:8,f:function(){ S.stam=stamMax(); S.rating=Math.min(5,S.rating+0.15); log('💤 睡了八小时。醒来天亮了，浑身是劲。（体力全满，评分 +0.15）'); }}
   ];
   items.forEach(function(it){
     const b=document.createElement('button');
@@ -716,7 +789,7 @@ function renderStam(){
     b.innerHTML=it.n+'<br><span style="font-size:10.5px;font-weight:400">'+(ok?'¥'+it.c:'还差 ¥'+fmt(it.c-S.money))+'</span>';
     b.onclick=function(){
       if(S.money<it.c){ toast('还差 ¥'+fmt(it.c-S.money),true); beep(220,0.1,'square',0.05); return; }
-      S.money-=it.c; it.f(); beep(820,0.08); render();
+      S.money-=it.c; if(it.h) spendTime(it.h,it.n); it.f(); beep(820,0.08); render();
     };
     box.appendChild(b);
   });
@@ -736,7 +809,10 @@ function renderTop(){
   $('#expBar').firstElementChild.style.width=clamp(S.exp/en*100,0,100)+'%';
   $('#uiExp').textContent=Math.floor(S.exp)+'/'+en+' 经验';
   const sl=SLOTS[slot()];
-  $('#uiTime').textContent=sl.icon+' '+sl.n+'（剩 '+Math.ceil(S.slotT)+'s）→ '+SLOTS[(slot()+1)%SLOTS.length].n;
+  const hh=((S.hour||0)%24+24)%24;
+  $('#uiTime').textContent='📅 第 '+(S.day||1)+' 天 · '+clockText()+' · '+sl.icon+' '+sl.n+
+    '（还有 '+(slotEndHour(hh)-hh).toFixed(1)+' 小时）';
+  const df=$('#dayFill'); if(df) df.style.width=clamp(hh/24*100,0,100)+'%';
   const cap=capacity(), sup=supplyRate(), act=actualRate();
   let tip='', cls='';
   if(cap<sup*0.9){ tip='🔥 爆单！运力不足，快招人 / 升装备'; cls='class="tag hot"'; }
@@ -766,8 +842,8 @@ function renderTop(){
   const db=$('#debtBar');
   if(S.money<0){
     db.classList.remove('hidden');
-    $('#debtLeft').textContent=Math.ceil(Math.max(0,DEBT_LIMIT-(S.debtT||0)))+' 秒';
-    $('#debtFill').style.width=clamp((S.debtT||0)/DEBT_LIMIT*100,0,100)+'%';
+    $('#debtLeft').textContent=Math.ceil(Math.max(0,debtLimit()-(S.debtT||0)))+' 秒';
+    $('#debtFill').style.width=clamp((S.debtT||0)/debtLimit()*100,0,100)+'%';
   } else db.classList.add('hidden');
   $('#grabPay').textContent=fmt(grabGain());
 }
@@ -780,7 +856,7 @@ function renderRiders(){
       '<span>'+riderRateText(r)+'</span></div>';
     const c=riderUpCost(r,i);
     div.appendChild(actBtn('升级','¥'+fmt(c),'green',()=>{
-      S.money-=c; r.lvl++; beep(760,0.08); log('📈 '+r.name+' 升到 Lv.'+r.lvl); render();
+      S.money-=c; r.lvl++; spendTime(1,'给 '+r.name+' 做培训'); beep(760,0.08); log('📈 '+r.name+' 升到 Lv.'+r.lvl); render();
     }));
     box.appendChild(div);
   });
@@ -791,7 +867,7 @@ function renderRiders(){
     div.innerHTML='<div class="ava" style="background:#f0f0f0">'+p.emoji+'</div>'+
       '<div class="info"><b>招募 '+p.name+'</b><span>新骑手 0.12 单/秒　名额 '+S.riders.length+'/'+maxRiders()+'（升段位、点「车队指挥」可解锁）</span></div>';
     div.appendChild(actBtn('招募','¥'+fmt(c),'',()=>{
-      S.money-=c; S.riders.push({...p,lvl:1}); log('🤝 '+p.name+' 加入团队！');
+      S.money-=c; S.riders.push({...p,lvl:1}); spendTime(2,'面试 '+p.name+'、办入职'); log('🤝 '+p.name+' 加入团队！');
       if(p.name==='老王') addFav('laowang',10);
       beep(880,0.12); render();
     }));
@@ -815,7 +891,7 @@ function renderDistricts(){
       const need=S.districts===i;
       div.appendChild(actBtn('开通','¥'+fmt(d.cost),'blue',()=>{
         if(!need){ toast('得先一个一个来，先开通「'+DISTRICTS[S.districts].name+'」'); return; }
-        S.money-=d.cost; S.districts++; log('🗺️ 开通商圈：'+d.name+'（派单 +'+d.supply.toFixed(2)+'/秒）');
+        S.money-=d.cost; S.districts++; spendTime(3,'跑「'+d.name+'」的开通手续'); log('🗺️ 开通商圈：'+d.name+'（派单 +'+d.supply.toFixed(2)+'/秒）');
         chord([523,659]); render();
       }));
     }
@@ -833,7 +909,7 @@ function renderUpgs(){
     div.innerHTML='<div class="ava" style="font-size:18px">'+u.icon+'</div>'+
       '<div class="info"><b>'+u.name+' <span style="color:#e17055">Lv.'+S.equip[u.key]+'</span></b><span>'+u.desc()+'</span></div>';
     div.appendChild(actBtn('升级','¥'+fmt(c),'purple',()=>{
-      S.money-=c; S.equip[u.key]++; beep(980,0.09); log('🛠️ 升级：'+u.name+' → Lv.'+S.equip[u.key]); render();
+      S.money-=c; S.equip[u.key]++; spendTime(1.5,'动手捣鼓「'+u.name+'」'); beep(980,0.09); log('🛠️ 升级：'+u.name+' → Lv.'+S.equip[u.key]); render();
     }));
     box.appendChild(div);
   });
@@ -855,7 +931,7 @@ function renderShops(){
       div.appendChild(s);
     } else {
       div.appendChild(actBtn('投资','¥'+fmt(c),'',()=>{
-        S.money-=c; S.shops[sh.key]++; beep(880,0.1);
+        S.money-=c; S.shops[sh.key]++; spendTime(4,'筹备「'+sh.n+'」'); beep(880,0.1);
         log('🏬 '+sh.n+' 升到 Lv.'+S.shops[sh.key]);
         if(sh.key==='cafe') addFav('suqing',5);
         render();
@@ -873,7 +949,7 @@ function renderAssets(){
       '<div class="info"><b>'+a.n+'</b><span>'+a.d+'</span></div>';
     if(owned){ const s=document.createElement('span'); s.style.cssText='font-size:12px;color:#00b894;font-weight:700'; s.textContent='已拥有'; div.appendChild(s); }
     else div.appendChild(actBtn('买入','¥'+fmt(a.cost),'blue',()=>{
-      S.money-=a.cost; S.assets[a.id]=true; beep(880,0.12);
+      S.money-=a.cost; S.assets[a.id]=true; spendTime(6,'看房、办「'+a.n+'」的手续'); beep(880,0.12);
       log('🏠 买入：'+a.n);
       if(a.id==='house1') addFav('mom',15);
       render();
@@ -895,7 +971,7 @@ function renderAttrs(){
     btn.textContent=S.sp>0?'+1（1点）':'技能点不足';
     btn.onclick=()=>{
       if(S.sp<=0){ toast('技能点不够——升级或推进剧情能拿到',true); beep(220,0.1,'square',0.06); return; }
-      S.sp--; S.attrs[a.k]++; beep(700,0.08); log('📊 '+a.n+' +1（当前 '+S.attrs[a.k]+'）'); render();
+      S.sp--; S.attrs[a.k]++; spendTime(0.5,'琢磨「'+a.n+'」'); beep(700,0.08); log('📊 '+a.n+' +1（当前 '+S.attrs[a.k]+'）'); render();
     };
     div.appendChild(btn);
     box.appendChild(div);
@@ -928,7 +1004,7 @@ function renderSkills(){
       if(!preOk){ toast('前置技能还没点亮',true); return; }
       if(!chiefOk){ toast('成为站长后才能修这条线',true); return; }
       if(S.sp<s.sp){ toast('技能点不够，还差 '+(s.sp-S.sp)+' 点',true); return; }
-      S.sp-=s.sp; S.skills[s.id]=true; chord([659,880]);
+      S.sp-=s.sp; S.skills[s.id]=true; spendTime(1,'钻研「'+s.n+'」'); chord([659,880]);
       log('🌳 点亮技能：'+s.n+'（'+s.b+'）');
       render();
     };
@@ -1018,6 +1094,7 @@ function grab(){
   const gain=grabGain();
   S.money+=gain; S.lifeOrders+=1; S.totalOrders+=1;
   S.stam=Math.max(0,(S.stam||0)-2.2);
+  spendTime(0.3,'抢单');
   gainExp(1);
   beep(700,0.07,'triangle');
   const btn=$('#grabBtn');
@@ -1073,7 +1150,7 @@ const ARC=[
        {t:'「那你教教我？」',fn(){ addFav('feige',14); S.attrs.memo+=1; log('🧭 飞哥沉默两秒，掏出手机发了你一份「全城近道地图」。（路线记忆 +1）'); }}]},
   { id:'mom1', who:'👵 妈妈', cond:()=>S.lifeOrders>=25,
     t:'电话里的雨声', d:'妈在电话那头问：「你那边怎么有雨声？你不是说在办公室加班吗？」\n你张了张嘴，一个字也说不出来。',
-    c:[{t:'坦白一切',fn(){ addFav('mom',20); S.attrs.calm+=1; log('👵 妈沉默了很久，只说：「那你慢点骑车。」（抗压 +1）'); }},
+    c:[{t:'坦白一切',fn(){ addFav('mom',20); S.attrs.grit+=1; log('👵 妈沉默了很久，只说：「那你慢点骑车。」（韧性 +1）'); }},
        {t:'「妈，办公室在装修。」（继续瞒着）',fn(){ addFav('mom',-8); addBuff(1.3,60); log('🏃 挂了电话，你拧满油门，把愧疚甩在风里。'); }}]},
   { id:'xl1', who:'🧑‍🎓 小林', cond:()=>S.lifeOrders>=40,
     t:'一个年轻人', d:'兼职大学生小林在路边修车，链条掉了三次。你蹲下来帮他装好，他红着脸：「哥，我一个月房租还没着落……」',
@@ -1098,7 +1175,7 @@ const ARC=[
   { id:'mom2', who:'👵 妈妈', cond:()=>!!S.assets.house1,
     t:'新房子的第一晚', d:'妈从老家过来，在空荡荡的客厅里转了一圈，摸摸墙，摸摸窗。\n「这么大房子，就你一个人住？」\n你说：「不一个人了。」',
     c:[{t:'「我有喜欢的人了。」',fn(){ addFav('mom',15); addFav('suqing',10); log('👵 妈笑了，眼里有泪：「带回来给我看看。」'); }},
-       {t:'「以后会有的。」',fn(){ addFav('mom',8); S.attrs.calm+=1; log('👵 妈说：「不急，妈等得起。」'); }}]},
+       {t:'「以后会有的。」',fn(){ addFav('mom',8); S.attrs.grit+=1; log('👵 妈说：「不急，妈等得起。」（韧性 +1）'); }}]},
 ];
 function checkArc(){
   for(const a of ARC){
@@ -1166,7 +1243,7 @@ function revive(){
 /* ================= 主循环 ================= */
 let started=false;
 let lastTick=Date.now(), saveAcc=0, driftAcc=0, renderAcc=0, arcAcc=0, lowWarn=false, debtWarned=false, stamWarned=false;
-const DEBT_LIMIT=90;
+function debtLimit(){ return 90+5*(S.attrs.grit||0); }
 function tick(){
   if(!started||S.over) return;
   const now=Date.now();
@@ -1184,7 +1261,7 @@ function tick(){
   }else{
     S.stam=clamp((S.stam||0)-stamDrain()*dt+stamRegen()*dt,0,stamMax());
     if((S.stam||0)<=0.5){
-      S.rating=Math.max(1,S.rating-0.008*dt);
+      S.rating=Math.max(1,S.rating-0.008*dt*Math.pow(0.85,(S.attrs.grit||0)));
       if(!stamWarned){
         stamWarned=true;
         toast('😵 体力见底！全队效率暴跌，还在倒贴钱——快收工休息',true);
@@ -1208,14 +1285,17 @@ function tick(){
       beep(180,0.45,'sawtooth');
       log('💸 账上开始见红了。90 秒内必须转正，否则破产清算。');
     }
-    if(S.debtT>=DEBT_LIMIT){ gameOver(); return; }
+    if(S.debtT>=debtLimit()){ gameOver(); return; }
   } else if(S.debtT>0){
     S.debtT=Math.max(0,S.debtT-dt*2.5);
     if(S.debtT<=0) debtWarned=false;
   }
-  /* 时段 */
-  S.slotT-=dt;
-  if(S.slotT<=0){ S.slotT=75; S.slot=(S.slot+1)%SLOTS.length; log('🕐 进入'+SLOTS[slot()].n+'（派单 ×'+SLOTS[slot()].sup.toFixed(2)+'，单价 ×'+SLOTS[slot()].pay+'）'); }
+  /* 游戏内时钟推进（跑单本身也在花时间） */
+  const prevSlot=slot();
+  advanceClock(dt/HOUR_SEC);
+  if(slot()!==prevSlot) log('🕐 '+clockText()+' 进入'+SLOTS[slot()].n+'（派单 ×'+slotSup().toFixed(2)+'，单价 ×'+slotPay().toFixed(2)+'）');
+  if(!S.today) S.today={orders:0,income:0,cost:0};
+  S.today.orders+=rate*dt; S.today.income+=income()*dt; S.today.cost+=upkeep()*dt;
   /* 评分恢复 */
   driftAcc+=dt;
   if(driftAcc>25){ driftAcc=0; if(S.rating<5) S.rating=Math.min(5,S.rating+0.015*(sk('words')?2.2:1)*(1+0.4*S.attrs.talk)); }
@@ -1270,6 +1350,8 @@ function beginGame(isNew){
       const earn=Math.max(0,netIncome())*0.5*away;
       const orders=S.resting?0:actualRate()*0.5*away;
       S.stam=Math.min(stamMax(),(S.stam||0)+away*stamRegen()*2);
+      const oh=(S.hour||0)+away/HOUR_SEC;
+      S.day=(S.day||1)+Math.floor(oh/24); S.hour=oh%24;
       S.money+=earn; S.lifeOrders+=orders; S.totalOrders+=orders; gainExp(orders*0.5);
       showStory('🌙 你不在的这段时间……','你离开的 '+Math.round(away/60)+' 分钟里，团队帮你把单跑着。\n离线收益按 50% 结算（最多 2 小时）。',
         [['离线单量','+'+fmt(orders)+' 单'],['离线收入','+¥'+fmt(earn)]]);

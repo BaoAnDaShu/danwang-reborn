@@ -183,9 +183,9 @@
 <div class="overlay hide" id="runModal">
   <div class="panel">
     <h3>🛵 跑外卖 · 接单台</h3>
-    <p class="sub" id="runSub">挑顺路的单接，注意时间和体力。</p>
+    <p class="sub" id="runSub">挑顺路、来得及的单接。注意 ⏰送达时限，超时会被差评；评分高小费多。</p>
     <div class="social-list" id="runList"></div>
-    <div class="acts"><button class="ghost" onclick="closeRun()">收工回家</button></div>
+    <div class="acts"><button class="ghost" onclick="refreshRun()">🔄 刷新订单</button><button class="ghost" onclick="closeRun()">收工回家</button></div>
   </div>
 </div>
 
@@ -302,6 +302,16 @@ const STORE_ITEMS=[
   {id:'hack',  nm:'📱 接单外挂',   cost:500, ef:'接单台单价 +8%'},
 ];
 const MOOD_PH=0.8;                      // 心情每小时自然衰减
+// 跑单备注：影响耗时/单价/小费，个别有翻车风险（体力不足给差评）
+const NOTES=[
+  {id:'none',  nm:'',            dur:0, pay:0,    tip:0, risk:null,     desc:''},
+  {id:'call',  nm:'📞 电话确认',  dur:4, pay:5,    tip:0, risk:null,     desc:'顾客要电话确认，多花点时间，多给几块'},
+  {id:'stairs',nm:'🪜 爬6楼无电梯',dur:6, pay:7,    tip:0, risk:null,     desc:'老楼没电梯，爬楼费劲但单价高'},
+  {id:'urgent',nm:'🌧️ 雨天加急', dur:5, pay:0,    tip:4, payMult:1.4, risk:null, desc:'加急单，给得多但更赶'},
+  {id:'soup',  nm:'🥣 易洒汤类',  dur:3, pay:6,    tip:0, risk:'spill', desc:'汤汤水水易洒，体力不够会翻车给差评'},
+  {id:'door',  nm:'📝 放门口别敲',dur:0, pay:0,    tip:3, risk:null,     desc:'放门口就行，顺手给小费'},
+  {id:'drink', nm:'🥤 顺带买饮料',dur:4, pay:8,    tip:2, risk:null,     desc:'帮带杯饮料，多赚一点'},
+];
 const rand=(a,b)=>a+Math.random()*(b-a);
 const ri=(a,b)=>Math.floor(rand(a,b+1));
 
@@ -480,21 +490,32 @@ function genOrders(){
   for(let i=0;i<5;i++){
     const from=RUN_FROM[ri(0,RUN_FROM.length-1)], to=RUN_TO[ri(0,RUN_TO.length-1)];
     const dist=+(rand(0.6,4.2).toFixed(1));
-    const dur=Math.round((dist*14+30)*runSpeed());
-    let pay=Math.round((22+dist*9+S.skills.tech*4)*ratingMult()*peak+rand(0,18));
+    const note=NOTES[ri(0,NOTES.length-1)];
+    const dur=Math.round((dist*14+30)*runSpeed())+note.dur;
+    let pay=Math.round((22+dist*9+S.skills.tech*4)*ratingMult()*peak+rand(0,18))+note.pay;
+    if(note.payMult) pay=Math.round(pay*note.payMult);
     pay=Math.round(pay*runPayMult());
     if(hasItem('hack')) pay=Math.round(pay*1.08);
-    runBoard.push({from,to,dist,dur,pay});
+    const tight=Math.random()<0.4;                        // 约 40% 是急单（送达时限紧）
+    const slack=tight?ri(0,35):Math.round(dur*1.5+ri(80,160));   // 急单缓冲短，松单缓冲长（可连接多单）
+    const deadline=Math.round(S.min+dur+slack);           // 必须在此时钟前送达，否则超时差评
+    runBoard.push({from,to,dist,dur,pay,deadline,note,urgent:tight});
   }
 }
 function renderRunBoard(){
   const box=$('runList'); if(!box) return; box.innerHTML='';
   const h=Math.floor(S.min/60), m=Math.floor(S.min%60);
-  const sub=$('runSub'); if(sub) sub.textContent='🕐 '+String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+' · 体力'+Math.round(S.stam)+'% · 评分'+S.rating.toFixed(1)+'⭐ · 挑顺路的单接';
+  const sub=$('runSub'); if(sub) sub.textContent='🕐 '+String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+' · 体力'+Math.round(S.stam)+'% · 评分'+S.rating.toFixed(1)+'⭐ · 挑顺路、来得及的单接';
   if(S.min>=DAY_END){ box.innerHTML='<div class="log tip" style="height:auto">天黑了，收工回家睡吧。</div>'; return; }
+  if(runBoard.length===0){ box.innerHTML='<div class="log tip" style="height:auto">这一波单接完了。点「🔄 刷新订单」看新单。</div>'; return; }
   runBoard.forEach((o,i)=>{
+    const late=S.min+o.dur>o.deadline;
+    const dl=o.deadline>DAY_END? '今晚前' : String(Math.floor(o.deadline/60)).padStart(2,'0')+':'+String(o.deadline%60).padStart(2,'0');
     const d=document.createElement('div'); d.className='order';
-    d.innerHTML='<div class="o-main"><div class="o-route">'+o.from+' → '+o.to+'</div><div class="o-meta">📏'+o.dist+'km · ⏱约'+o.dur+'分 · 💰预计¥'+o.pay+'</div></div><button class="o-btn">接单</button>';
+    const noteTxt=o.note&&o.note.nm?(' · 📝'+o.note.nm):'';
+    const urgTxt=o.urgent?' · 🔥急单':'';
+    const tipTxt=(o.note&&o.note.tip)?' +小费':'';
+    d.innerHTML='<div class="o-main"><div class="o-route">'+o.from+' → '+o.to+'</div><div class="o-meta">📏'+o.dist+'km · ⏱约'+o.dur+'分 · 💰预计¥'+o.pay+tipTxt+noteTxt+urgTxt+'<br>⏰ 需在 '+dl+' 前送达'+(late?' ⚠️来不及':'')+'</div></div><button class="o-btn"'+(late?' style="background:#c1453b"':'')+'>'+(late?'来不及':'接单')+'</button>';
     d.querySelector('.o-btn').onclick=()=>acceptOrder(i);
     box.appendChild(d);
   });
@@ -510,23 +531,44 @@ function acceptOrder(i){
   const o=runBoard[i]; if(!o) return;
   if(S.min>=DAY_END){ closeRun(); doSleep(); return; }
   if(S.stam<=2){ pushLog('腿软了，先歇会儿再接单。','lose'); render(); save(); return; }
-  let pay=o.pay; const tired=S.stam<28;
+  const late=S.min+o.dur>o.deadline;          // 接这单会超过送达时限 → 超时
+  const tired=S.stam<28;
+  let pay=o.pay;
   if(tired) pay=Math.round(pay*0.6);
   if(S.mood<20 && !hasItem('power')) pay=Math.round(pay*0.9);
   pay=Math.round(pay*(1+S.up.incPct*0.1));
   if(hasItem('hack')) pay=Math.round(pay*1.08);
-  const cost=runStamCost();
-  S.money+=pay; S.stam-=cost; S.energy=Math.max(0,S.energy-6);
-  let rg=tired?-0.1:0.1; if(hasItem('box')) rg+=0.15;
+  // 小费：评分越高小费越多（封顶~18%），加备注固定小费
+  let tip=Math.round(pay*Math.max(0,Math.min(1,(S.rating-3.5)/1.5))*0.18)+(o.note?o.note.tip:0);
+  let rg, lateFlag=false, spill=false;
+  if(late){ rg=-0.3; lateFlag=true; tip=0; }                 // 超时 → 差评，无小费
+  else { rg=tired?-0.1:0.1; if(hasItem('box')) rg+=0.15; }
+  if(o.note && o.note.risk==='spill' && S.stam<30){ spill=true; rg=-0.4; tip=0; }  // 易洒汤类 + 体力不足 → 翻车差评
+  S.money+=pay+tip; S.stam-=runStamCost(); S.energy=Math.max(0,S.energy-6);
+  if(hasItem('power')&&!spill) S.mood=Math.min(100,S.mood+2);
   S.rating=Math.min(5,Math.max(1,S.rating+rg));
   const wasHungry=S.hunger<20;
   advance(o.dur);
   addXp('drive',14);
-  pushLog('🛵 接了 '+o.from+'→'+o.to+'，到手 ¥'+pay+(tired?'（赶时间单价打折）':'')+(S.mood<20?'（心情差状态打折）':'')+(wasHungry?'（肚子叫了一路）':''));
+  let msg='🛵 接了 '+o.from+'→'+o.to+(o.note&&o.note.nm?('（'+o.note.nm+'）'):'')+'，到手 ¥'+pay+(tip?(' +小费¥'+tip):'')+(tired?'（赶时间单价打折）':'')+(S.mood<20?'（心情差状态打折）':'')+(wasHungry?'（肚子叫了一路）':'');
+  if(lateFlag) msg+=' ⚠️超时送达，顾客给了差评';
+  if(spill) msg+=' 💥汤洒了，被差评';
+  pushLog(msg);
   if(!S.over) checkForced();
   if(phase==='event'||S.over){ closeRun(); render(); save(); return; }
-  genOrders(); renderRunBoard(); render(); save();
+  if(S.min<=DAY_START){ closeRun(); render(); save(); return; }   // 跨天，自动收工
+  runBoard.splice(i,1);
+  pruneExpired();
+  renderRunBoard(); render(); save();
 }
+// 接单耗时后，清理"来不及送"的剩余单（手头事多 → 被取消 → 评分小跌）
+function pruneExpired(){
+  let removed=0;
+  runBoard=runBoard.filter(o=>{ if(S.min+o.dur>o.deadline){ removed++; return false; } return true; });
+  if(removed){ S.rating=Math.max(1,S.rating-0.05*removed); pushLog('⏰ 有 '+removed+' 单因你手头事多、来不及送被取消了（评分小跌）','lose'); }
+}
+// 刷新一波新单（重新派单）
+function refreshRun(){ if(phase!=='play'||S.over) return; genOrders(); renderRunBoard(); render(); save(); }
 function doSocial(){
   if(phase!=='play'||S.over) return;
   S.energy=Math.min(enMax(),S.energy+12); advance(60);

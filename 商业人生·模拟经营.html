@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>商业人生 · 模拟经营</title>
+<style>
+:root{ --bg:#0f1420; --card:#1a2233; --ink:#e8edf6; --sub:#8a96ad; --acc:#5b8cff; --good:#34d399; --bad:#f87171; --warn:#fbbf24; --line:#26314a;}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,'PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
+#app{max-width:820px;margin:0 auto;padding:18px 16px 40px}
+.screen{display:none}.screen.on{display:block}
+h1{font-size:22px;margin:0 0 4px}.sub{color:var(--sub);font-size:13px;margin:0 0 16px;line-height:1.6}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+.kpi{font-size:13px;color:var(--sub)}.kpi b{font-size:20px;color:var(--ink);font-weight:700}
+.bar{height:9px;background:#0c111c;border-radius:6px;overflow:hidden;margin-top:6px}
+.bar>i{display:block;height:100%;border-radius:6px}
+.line{display:flex;gap:14px;flex-wrap:wrap;justify-content:space-between;align-items:flex-end}
+button{font-family:inherit;cursor:pointer;border:1px solid var(--line);background:#222c42;color:var(--ink);border-radius:11px;padding:11px 12px;font-size:13.5px;flex:1;min-width:120px;transition:.15s}
+button:hover:not(:disabled){border-color:var(--acc);transform:translateY(-1px)}
+button:disabled{opacity:.4;cursor:not-allowed}
+button.primary{background:linear-gradient(90deg,#5b8cff,#6f9bff);border-color:transparent;color:#fff;font-weight:700}
+button.ghost{background:transparent}
+.biz{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.biz .b{border:1px solid var(--line);border-radius:11px;padding:11px;background:#141b2b}
+.biz .b h3{margin:0 0 4px;font-size:14px}
+.biz .b .st{font-size:11.5px;color:var(--sub);min-height:30px;line-height:1.5}
+.biz .b .act{margin-top:8px}
+.inv{display:flex;gap:6px;align-items:center;margin-top:6px}
+.inv input{width:84px;background:#0c111c;border:1px solid var(--line);color:var(--ink);border-radius:9px;padding:8px;font-size:13px;font-family:inherit}
+#log{font-size:12.5px;color:var(--sub);line-height:1.7;max-height:140px;overflow:auto}
+#log div{padding:2px 0;border-bottom:1px dashed #1c2435}
+.modal{position:fixed;inset:0;background:rgba(6,9,16,.72);display:none;align-items:center;justify-content:center;padding:18px;z-index:20}
+.modal.on{display:flex}
+.modal .box{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px;max-width:440px;width:100%}
+.modal .box h2{margin:0 0 8px;font-size:18px}.modal .box p{color:var(--sub);font-size:14px;margin:0 0 16px;line-height:1.6}
+.opts{display:flex;flex-direction:column;gap:10px}
+.tag{display:inline-block;font-size:11px;padding:2px 8px;border-radius:20px;background:#222c42;color:var(--sub);margin-left:6px}
+.big{font-size:30px;font-weight:800}.win{color:var(--good)}.lose{color:var(--bad)}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <section id="startScreen" class="screen on">
+    <h1>商业人生 · 模拟经营</h1>
+    <p class="sub">从 ¥3000 的穷打工仔起步。时间是「实时」的——每约 2 秒过一个月，每月你有 <b style="color:var(--ink)">3 个行动点</b> 分配去 <b style="color:var(--ink)">开店 / 贸易 / 地产 / 创业</b> 四条生意线。靠分配资金与精力，逆袭到身价 <b style="color:var(--ink)">¥10,000,000</b>。破产即出局，随时可重开试不同活法。</p>
+    <div class="card" style="font-size:13px;color:var(--sub);line-height:1.8">
+      <b style="color:var(--ink)">四条生意线（轻操作、重决策）</b><br>
+      🏪 <b style="color:var(--ink)">开店</b>：花 2 万开小店，每月稳定产出，搞促销可提效（现金流主线）<br>
+      📈 <b style="color:var(--ink)">贸易</b>：投一笔钱低买高卖，行情每月波动，赌对了翻倍（高风险高回报）<br>
+      🏠 <b style="color:var(--ink)">地产</b>：花 5 万买房，每月收租 300，房价长期微涨（稳健压舱石）<br>
+      💼 <b style="color:var(--ink)">创业</b>：押 3 万做项目，商业力高更稳，可能暴富也可能血亏（码农本色）<br>
+      · 精力有限：行动耗精力，精力低所有产出打折；休息回精力<br>
+      · 每月可能弹出经营事件，<b style="color:var(--ink)">二选一</b>改写走向
+    </div>
+    <div class="card"><div class="row" style="gap:10px"><button class="primary" style="flex:1" onclick="beginLife()">▶ 开始这一世</button><button class="ghost" style="flex:1" onclick="restart()">🔄 重开</button></div></div>
+  </section>
+
+  <section id="gameScreen" class="screen">
+    <div class="card">
+      <div class="line">
+        <div><div class="kpi">时间</div><b id="ym" class="big">第1年·1月</b></div>
+        <div style="text-align:right"><div class="kpi">现金</div><b id="cash" class="big">¥0</b></div>
+        <div style="text-align:right"><div class="kpi">身价（目标千万）</div><b id="worth" class="big">¥0</b></div>
+      </div>
+      <div class="kpi" style="margin-top:10px">逆袭进度</div>
+      <div class="bar"><i id="goalBar" style="width:0%;background:linear-gradient(90deg,#34d399,#5b8cff)"></i></div>
+      <div class="kpi" style="margin-top:10px">精力 <span id="enTxt" style="color:var(--ink)">100</span> · 商业力 <b id="bp" style="color:var(--ink)">1</b> · 本月行动点 <b id="ap" style="color:var(--ink)">3</b></div>
+      <div class="bar"><i id="enBar" style="width:100%;background:linear-gradient(90deg,#f87171,#fbbf24,#34d399)"></i></div>
+      <div class="kpi" style="margin-top:10px">本月剩余时间</div>
+      <div class="bar"><i id="timeBar" style="width:100%;background:linear-gradient(90deg,#5b8cff,#7aa2ff)"></i></div>
+    </div>
+
+    <div class="card">
+      <div class="biz">
+        <div class="b"><h3>🏪 开店</h3><div class="st" id="stShop"></div><div class="act" id="actShop"></div></div>
+        <div class="b"><h3>📈 贸易</h3><div class="st" id="stTrade"></div><div class="act" id="actTrade"></div></div>
+        <div class="b"><h3>🏠 地产</h3><div class="st" id="stReal"></div><div class="act" id="actReal"></div></div>
+        <div class="b"><h3>💼 创业</h3><div class="st" id="stBiz"></div><div class="act" id="actBiz"></div></div>
+      </div>
+      <div class="row" style="margin-top:10px;gap:10px">
+        <button id="actWork" onclick="doWork()">💼 打工（攒本金）</button>
+        <button onclick="doRest()">😴 休息（精力+12）</button>
+        <button class="ghost" onclick="restart()">🔄 重开一世</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="kpi" style="margin-bottom:6px">经营记录</div>
+      <div id="log"></div>
+    </div>
+  </section>
+
+  <div id="eventModal" class="modal"><div class="box">
+    <span class="tag" id="evTag"></span><h2 id="evTitle"></h2><p id="evDesc"></p>
+    <div class="opts" id="evOpts"></div>
+  </div></div>
+
+  <div id="overModal" class="modal"><div class="box" style="text-align:center">
+    <div class="big" id="overTitle"></div><p id="overDesc"></p>
+    <div class="row"><button class="primary" onclick="beginLife()">↻ 再活一世</button><button class="ghost" onclick="toStart()">🎲 回开局</button></div>
+  </div></div>
+
+</div>
+
+<script>
+const MONTH_MS=2000, GOAL=10000000, START_CASH=3000, START_BP=1, AP_PER_MONTH=3;
+const SHOP_COST=20000, HOUSE_COST=50000, BIZ_COST=30000;
+let S=null, phase='idle', acc=0, lastT=0, raf=0, curEvent=null, log=[];
+
+/* ---------- 开局 ---------- */
+function beginLife(){
+  S={ year:1, month:1, cash:START_CASH, energy:100, bp:START_BP, ap:AP_PER_MONTH,
+      shop:{open:false,boost:0}, trade:0, houses:0, startup:0, startupActive:false,
+      won:false, over:false, reason:'' };
+  log=[]; curEvent=null; acc=0; phase='play';
+  pushLog('穷打工仔起步，手握 ¥'+START_CASH);
+  show('gameScreen'); renderAll();
+}
+function toStart(){ show('startScreen'); }
+
+/* ---------- 时间推进 ---------- */
+function step(dt){
+  if(phase!=='play') return;
+  acc+=dt;
+  while(acc>=MONTH_MS){ acc-=MONTH_MS; endMonth(); if(phase!=='play') break; }
+  renderTime();
+}
+function endMonth(){
+  const eMul= S.energy<50 ? (0.5+0.5*S.energy/100) : 1;   // 精力低→产出打折（倒U左半）
+  // 开店
+  if(S.shop.open){
+    const net=Math.round((1500+S.bp*300)*(1+S.shop.boost)*eMul) - 800;
+    S.cash+=net; S.shop.boost*=0.6;
+    if(net>=0) pushLog('店铺月净 +¥'+net); else pushLog('店铺亏损 '+net);
+  }
+  // 贸易：持有本金每月波动结算（复利）
+  if(S.trade>0){
+    const r=(Math.random()*0.5-0.15)*(0.6+S.bp*0.04)*eMul;
+    const g=Math.round(S.trade*r); S.cash+=g;
+    pushLog('贸易结算 '+(g>=0?'+¥':'-¥')+Math.abs(g));
+  }
+  // 地产：收租 + 房价微涨
+  if(S.houses>0){ const rent=S.houses*300; S.cash+=rent; pushLog('房租 +¥'+rent); }
+  // 创业：赌回报
+  if(S.startupActive){
+    const p=0.5+S.bp*0.03;
+    if(Math.random()<p){ const g=Math.round(S.startup*0.4*eMul); S.cash+=g; pushLog('项目分红 +¥'+g); }
+    else { S.startup=Math.round(S.startup*0.5); pushLog('项目遇挫，本金剩 ¥'+S.startup); }
+  }
+  // 生活费 + 精力恢复
+  const living=700+Math.floor(S.year*40);
+  S.cash-=living; S.energy=Math.min(100,S.energy+8);
+  pushLog('生活开销 -¥'+living);
+  // 推进时间
+  S.month++; if(S.month>12){ S.month=1; S.year++; }
+  // 结局判定
+  const worth=netWorth();
+  if(S.cash< -5000 && worth<GOAL*0.1) return over(false,'欠债太多又没资产，破产出局');
+  if(S.year>40) return over(worth>=GOAL, worth>=GOAL?'40岁前身价破千万，商业帝国建成！':'40岁还没逆袭，这局认了');
+  if(worth>=GOAL) return over(true,'身价提前破千万，逆袭成功！');
+  // 事件
+  if(Math.random()<0.32){ curEvent=pickEvent(); phase='event'; renderEvent(); }
+  else { S.ap=AP_PER_MONTH; }
+}
+function netWorth(){ return Math.round(S.cash + S.houses*HOUSE_COST + S.trade + S.startup + (S.shop.open?SHOP_COST:0)); }
+function checkWin(){ if(S && !S.won && netWorth()>=GOAL) over(true,'身价提前破千万，逆袭成功！'); }
+
+/* ---------- 经营动作 ---------- */
+function doShop(){
+  if(phase!=='play'||S.ap<=0) return;
+  if(!S.shop.open){
+    if(S.cash<SHOP_COST){ pushLog('钱不够开店（需 ¥'+SHOP_COST+'）'); return; }
+    S.cash-=SHOP_COST; S.shop.open=true; S.ap--; pushLog('盘下小店，花 ¥'+SHOP_COST);
+  } else {
+    S.shop.boost+=0.25; S.energy-=6; S.ap--; pushLog('搞促销提效，本月产出+25%');
+  }
+  afterAct();
+}
+function doTrade(){
+  if(phase!=='play'||S.ap<=0) return;
+  const amt=Math.max(0,Math.floor(Number(document.getElementById('tradeAmt').value)||0));
+  if(amt<=0){ pushLog('投入为 0'); return; }
+  if(S.cash<amt){ pushLog('钱不够，投不了 '+amt); return; }
+  S.cash-=amt; S.trade+=amt; S.energy-=4; S.ap--; pushLog('投入贸易 ¥'+amt);
+  afterAct();
+}
+function doReal(){
+  if(phase!=='play'||S.ap<=0) return;
+  if(S.cash<HOUSE_COST){ pushLog('钱不够买房（需 ¥'+HOUSE_COST+'）'); return; }
+  S.cash-=HOUSE_COST; S.houses++; S.energy-=3; S.ap--; pushLog('买下一处房产，开始收租');
+  afterAct();
+}
+function doBiz(){
+  if(phase!=='play'||S.ap<=0) return;
+  if(S.startupActive){ pushLog('已有项目在跑'); return; }
+  if(S.cash<BIZ_COST){ pushLog('钱不够创业（需 ¥'+BIZ_COST+'）'); return; }
+  S.cash-=BIZ_COST; S.startup=BIZ_COST; S.startupActive=true; S.energy-=10; S.ap--; pushLog('押上 ¥'+BIZ_COST+' 启动项目');
+  afterAct();
+}
+function doRest(){
+  if(phase!=='play'||S.ap<=0) return;
+  S.energy=Math.min(100,S.energy+12); S.ap--; pushLog('休息充电，精力 +12');
+  afterAct();
+}
+function doWork(){
+  if(phase!=='play'||S.ap<=0) return;
+  const g=Math.round(1400+S.bp*120); S.cash+=g; S.energy-=2; S.ap--; pushLog('打工攒本金 +¥'+g);
+  afterAct();
+}
+function afterAct(){ checkWin(); if(phase==='play') renderAll(); }
+
+/* ---------- 事件 ---------- */
+const EVENTS=[
+  {tag:'行情',title:'原材料涨价',desc:'供应商统一提价 15%，你的开店成本要涨。',
+   opts:[{label:'自己扛（本月店铺净收-）',apply:()=>{ if(S.shop.open)S.cash-=400; return '硬扛了这波涨价';}},
+         {label:'涨价转嫁给顾客（客流略降）',apply:()=>{ S.shop.boost=Math.max(0,S.shop.boost-0.1); return '提价保利润，客流小降';}}]},
+  {tag:'人才',title:'得力员工想单飞',desc:'店里骨干要辞职创业，挽留要加薪。',
+   opts:[{label:'加薪留住（花¥2000）',apply:()=>{ if(S.cash>=2000){S.cash-=2000;S.bp+=1;return '留住人才，商业力+1';} return '钱不够，只能放人';}},
+         {label:'放人，自己顶上',apply:()=>{ S.energy-=10; return '你亲自顶班，精力-10';}}]},
+  {tag:'风口',title:'一个风口项目找你合投',desc:'朋友邀你合投一个看涨的项目，要 ¥8000。',
+   opts:[{label:'合投¥8000',apply:()=>{ if(S.cash<8000)return '钱不够，错过'; S.cash-=8000; const up=Math.random()<(0.4+S.bp*0.03); if(up){S.cash+=16000;return '风口踩中，+¥16000';} return '风口过了，¥8000没了';}},
+         {label:'观望',apply:()=>'你没上车，继续观望'}]},
+  {tag:'健康',title:'连续熬夜身体亮红灯',desc:'医生让你歇一歇。',
+   opts:[{label:'花¥3000调理',apply:()=>{ if(S.cash>=3000){S.cash-=3000;S.energy=Math.min(100,S.energy+20);return '调理后精力回升';} return '钱不够，硬撑';}},
+         {label:'继续冲',apply:()=>{ S.energy-=15; return '硬撑，精力-15';}}]},
+  {tag:'政策',title:'学区划片调整',desc:'你的一处房产突然成了学区房。',
+   opts:[{label:'趁热卖出（房价+20%）',apply:()=>{ if(S.houses>0){S.houses--;S.cash+=Math.round(HOUSE_COST*1.2);return '卖出一套，落袋为安';} return '没房可卖';}},
+         {label:'留着收租',apply:()=>'你留着收租，长期看好'}]},
+];
+function pickEvent(){ return EVENTS[Math.floor(Math.random()*EVENTS.length)]; }
+function choose(i){
+  if(phase!=='event'||!curEvent) return;
+  pushLog('【'+curEvent.title+'】'+curEvent.opts[i].apply(S));
+  curEvent=null; phase='play'; S.ap=AP_PER_MONTH; checkWin();
+  if(phase==='play') renderAll();
+}
+function over(win,reason){
+  S.over=true; S.won=win; S.reason=reason; phase='over';
+  document.getElementById('overTitle').textContent= win?'🎉 逆袭成功':'💀 这局没了';
+  document.getElementById('overTitle').className='big '+(win?'win':'lose');
+  document.getElementById('overDesc').textContent= reason+'　·　终身心价 ¥'+netWorth();
+  document.getElementById('overModal').classList.add('on');
+}
+function restart(){ document.getElementById('overModal').classList.remove('on'); beginLife(); }
+
+/* ---------- 渲染 ---------- */
+function show(id){ ['startScreen','gameScreen'].forEach(s=>document.getElementById(s).classList.toggle('on',s===id)); }
+function pushLog(t){ log.unshift(t); if(log.length>40) log.pop(); const el=document.getElementById('log'); if(el) el.innerHTML=log.map(x=>'<div>'+x+'</div>').join(''); }
+function renderTime(){ const tb=document.getElementById('timeBar'); if(tb) tb.style.width=Math.max(0,Math.min(100,(1-acc/MONTH_MS)*100))+'%'; }
+function setBtn(id,html,dis){ const el=document.getElementById(id); if(!el)return; el.innerHTML=html; el.disabled=!!dis; }
+function renderAll(){
+  if(!S) return;
+  document.getElementById('ym').textContent='第'+S.year+'年·'+S.month+'月';
+  document.getElementById('cash').textContent='¥'+Math.round(S.cash);
+  const w=netWorth();
+  document.getElementById('worth').textContent='¥'+w;
+  document.getElementById('goalBar').style.width=Math.max(0,Math.min(100,w/GOAL*100))+'%';
+  document.getElementById('enTxt').textContent=Math.max(0,Math.round(S.energy));
+  document.getElementById('enBar').style.width=Math.max(0,Math.min(100,S.energy))+'%';
+  document.getElementById('bp').textContent=S.bp.toFixed(1);
+  document.getElementById('ap').textContent=S.ap;
+  // 开店
+  document.getElementById('stShop').textContent= S.shop.open?('营业中，本月加成+'+(S.shop.boost*100).toFixed(0)+'%'):'未开店';
+  setBtn('actShop', S.shop.open?'搞促销(+25%产出)':'开小店(¥'+SHOP_COST+')', S.ap<=0);
+  setBtn('actWork', '💼 打工（攒本金）', S.ap<=0);
+  // 贸易
+  document.getElementById('stTrade').textContent='持仓 ¥'+S.trade+(S.trade>0?'（每月波动结算）':'');
+  document.getElementById('actTrade').innerHTML='<div class="inv"><button onclick="doTrade()">投贸易</button><input id="tradeAmt" type="number" value="5000" min="0" step="1000"><span class="kpi">赌行情</span></div>';
+  // 地产
+  document.getElementById('stReal').textContent='房产 '+S.houses+' 套，月租 +¥'+(S.houses*300);
+  setBtn('actReal','买房收租(¥'+HOUSE_COST+')', S.ap<=0);
+  // 创业
+  document.getElementById('stBiz').textContent= S.startupActive?('项目进行中，本金 ¥'+S.startup):'未启动';
+  setBtn('actBiz', S.startupActive?'项目中…':'创业(¥'+BIZ_COST+')', S.ap<=0||S.startupActive);
+  renderTime();
+}
+function renderEvent(){
+  if(!curEvent) return;
+  document.getElementById('evTag').textContent=curEvent.tag;
+  document.getElementById('evTitle').textContent=curEvent.title;
+  document.getElementById('evDesc').textContent=curEvent.desc;
+  document.getElementById('evOpts').innerHTML=curEvent.opts.map((o,i)=>'<button onclick="choose('+i+')">'+o.label+'</button>').join('');
+  document.getElementById('eventModal').classList.add('on');
+}
+
+/* ---------- 启动 ---------- */
+function loop(t){ if(!lastT) lastT=t; const dt=t-lastT; lastT=t; step(dt); raf=requestAnimationFrame(loop); }
+if(typeof document!=='undefined'){ show('startScreen'); raf=requestAnimationFrame(loop); }
+</script>
+</body>
+</html>

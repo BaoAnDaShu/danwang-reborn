@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>外卖人生模拟器</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;background:#f4f6f9;color:#1f2328;padding:10px;line-height:1.6}
+#app{max-width:700px;margin:0 auto}
+.card{background:#fff;border:1px solid #e1e5ea;border-radius:12px;padding:14px;margin-bottom:10px}
+h1{font-size:20px;font-weight:600;margin-bottom:6px}
+h2{font-size:15px;font-weight:600;margin-bottom:8px}
+.muted{color:#6b7280;font-size:13px}
+#hud{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.stat{background:#f4f6f9;border-radius:8px;padding:6px 10px;font-size:13px;white-space:nowrap}
+.stat b{font-weight:600}
+.bar{height:8px;background:#e5e7eb;border-radius:4px;overflow:hidden;margin-top:4px}
+.bar>i{display:block;height:100%;background:#2563eb;transition:width .2s}
+.bar.warn>i{background:#d97706}
+.bar.bad>i{background:#dc2626}
+canvas{display:block;width:100%;border-radius:10px;background:#e8eaed;border:1px solid #e1e5ea;touch-action:none}
+#acts{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px}
+button{font-family:inherit;font-size:14px;padding:11px 12px;border:1px solid #d1d5db;background:#fff;border-radius:9px;cursor:pointer;text-align:left;transition:.12s}
+button:hover:not(:disabled){background:#f0f4ff;border-color:#2563eb}
+button:active:not(:disabled){transform:translateY(1px)}
+button:disabled{opacity:.5;cursor:not-allowed}
+button.primary{background:#2563eb;color:#fff;border-color:#2563eb;font-weight:600;text-align:center}
+button.primary:hover:not(:disabled){background:#1d4ed8}
+button .sub{display:block;font-size:12px;font-weight:400;opacity:.75;margin-top:2px}
+#log{max-height:190px;overflow-y:auto;font-size:13px}
+#log div{padding:3px 0;border-bottom:1px dashed #eef0f3}
+.earn{color:#059669;font-weight:600}
+.lose{color:#dc2626;font-weight:600}
+#task{margin-top:6px}
+.hide{display:none!important}
+.tip{background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:8px 10px;font-size:13px;margin-top:8px}
+#start{position:fixed;inset:0;background:#f4f6f9;z-index:50;display:flex;align-items:center;justify-content:center;padding:16px}
+#startBox{max-width:460px}
+.big{font-size:26px;font-weight:700;margin-bottom:4px}
+.row{display:flex;justify-content:space-between;font-size:13px;padding:2px 0}
+</style>
+</head>
+<body>
+
+<div id="start">
+  <div class="card" id="startBox">
+    <div class="big">外卖人生模拟器</div>
+    <div class="muted">40 岁，工号 0037。昨天还在改祖传代码，今天名单上有你。</div>
+    <div style="margin:14px 0;padding:12px;background:#f8fafc;border-radius:8px;font-size:13px">
+      <div class="row"><span>怎么玩</span></div>
+      <div class="muted" style="margin-top:6px">
+        · <b>挑单</b>：每次给你三个单。远的钱多，但体力不够就送不到<br>
+        · <b>跑单</b>：方向键 / WASD 骑车，先去 🏪 取餐再送到 🏠，躲开 🚗<br>
+        · <b>体力是本钱</b>：体力低了骑得慢 → 超时 → 报酬半价 + 掉评分 → 单价更低<br>
+        · <b>取舍</b>：接着跑 / 休息两小时 / 学技术 / 找苏晴 / 收工 —— 时间体力都有限<br>
+        · <b>目标</b>：10 天内攒够 ¥1200 买下自己的电动车。<br>
+        　每天房租伙食 ¥130 照扣，连续三天交不上就得回老家
+      </div>
+    </div>
+    <button class="primary" style="width:100%" onclick="startGame(false)">开始第 1 天</button>
+    <button id="btnCont" class="hide" style="width:100%;margin-top:8px" onclick="startGame(true)">继续上次存档</button>
+    <button id="btnWipe" class="hide" style="width:100%;margin-top:8px;color:#dc2626" onclick="wipe()">清空存档重新开局</button>
+  </div>
+</div>
+
+<div id="app">
+  <div class="card">
+    <div id="hud"></div>
+    <div id="task"></div>
+  </div>
+
+  <div class="card">
+    <canvas id="cv"></canvas>
+    <div id="acts"></div>
+  </div>
+
+  <div class="card">
+    <h2>今日流水</h2>
+    <div id="log"></div>
+  </div>
+</div>
+
+<script>
+/* ================= 常量 ================= */
+const TILE=44, MW=15, MH=11, CVW=MW*TILE, CVH=MH*TILE;
+const DAY_START=6*60, DAY_END=23*60;      // 分钟
+const SAVE_KEY='waimai_life_v1';
+const GOAL=1200, GOAL_DAYS=10;
+
+const RESTS=[['码农食堂','🍜'],['Bug拌面','🍲'],['递归奶茶','🧋'],['沙县之光','🥟'],['996烧烤','🍢'],['变量咖啡','☕'],['栈溢出火锅','🍚']];
+const HOMES=[['海棠小区','🏠'],['光谷公寓','🏢'],['城中村','🏚️'],['江景花园','🏡'],['青年社区','🏘️'],['老破小','🏠']];
+const CARS=['🚗','🚕','🚙','🚌','🚐'];
+
+/* ================= 状态 ================= */
+let S=null, cv, ctx, keys={}, raf=null, lastT=0;
+let map=[], cars=[], player=null, order=null, offers=[], phase='idle', shake=0, float=[];
+
+function newSave(){
+  return {day:1,min:DAY_START,money:300,stam:100,stamMax:100,stamBase:100,fatigue:0,
+    tech:0,fav:0,rating:5.0,orders:0,earn:0,spend:0,bad:0,done:false,bike:false,broke:0,over:false};
+}
+function load(){ try{const s=localStorage.getItem(SAVE_KEY);return s?JSON.parse(s):null;}catch(e){return null;} }
+function save(){ try{localStorage.setItem(SAVE_KEY,JSON.stringify(S));}catch(e){} }
+
+/* ================= 地图 ================= */
+function genMap(){
+  const m=[];
+  for(let y=0;y<MH;y++){ m[y]=[];
+    for(let x=0;x<MW;x++) m[y][x]=(x%3!==0&&y%3!==0);
+  }
+  return m;
+}
+function isBlocked(px,py){
+  const r=11;
+  for(const [ox,oy] of [[-r,-r],[r,-r],[-r,r],[r,r],[0,0]]){
+    const tx=Math.floor((px+ox)/TILE), ty=Math.floor((py+oy)/TILE);
+    if(tx<0||ty<0||tx>=MW||ty>=MH) return true;
+    if(map[ty][tx]) return true;
+  }
+  return false;
+}
+function randRoad(){
+  for(let i=0;i<200;i++){
+    const x=Math.floor(Math.random()*MW), y=Math.floor(Math.random()*MH);
+    if(!map[y][x]) return {x:x*TILE+TILE/2, y:y*TILE+TILE/2};
+  }
+  return {x:TILE/2,y:TILE/2};
+}
+function spawnCars(){
+  cars=[];
+  const rows=[],cols=[];
+  for(let y=0;y<MH;y++) if(y%3===0) rows.push(y);
+  for(let x=0;x<MW;x++) if(x%3===0) cols.push(x);
+  const n=8+(S?Math.min(7,S.day):0);
+  for(let i=0;i<n;i++){
+    if(Math.random()<.5){
+      const r=rows[Math.floor(Math.random()*rows.length)];
+      cars.push({x:Math.random()*CVW,y:r*TILE+TILE/2,h:true,v:(Math.random()<.5?-1:1)*(38+Math.random()*34),e:CARS[i%CARS.length]});
+    }else{
+      const c=cols[Math.floor(Math.random()*cols.length)];
+      cars.push({x:c*TILE+TILE/2,y:Math.random()*CVH,h:false,v:(Math.random()<.5?-1:1)*(38+Math.random()*34),e:CARS[i%CARS.length]});
+    }
+  }
+}
+
+/* ================= 时段 ================= */
+function slotName(m){
+  const h=Math.floor(m/60);
+  if(h>=7&&h<9) return {n:'早高峰',mult:2.0,c:'#dc2626'};
+  if(h>=11&&h<13) return {n:'午高峰',mult:2.0,c:'#dc2626'};
+  if(h>=17&&h<19) return {n:'晚高峰',mult:2.2,c:'#dc2626'};
+  if(h>=21&&h<23) return {n:'夜宵档',mult:1.6,c:'#d97706'};
+  return {n:'平峰',mult:1.0,c:'#6b7280'};
+}
+
+/* ================= 体力影响（倒U核心） ================= */
+function stamRatio(){ return S.stam/S.stamMax; }
+function speedMult(){
+  const r=stamRatio();
+  let m = r>0.6?1 : r>0.35?0.86 : r>0.15?0.62 : 0.5;
+  m *= 1+S.tech*0.06;
+  return m;
+}
+function crashPenalty(){ return stamRatio()<0.3?2:1; }
+/* 倒U核心：体力见底时送得慢、态度差、容易洒餐 —— 单价直接打折 */
+function stamPayMult(){
+  const r=stamRatio();
+  return r>=0.3?1 : r>=0.15?0.65 : 0.45;
+}
+
+/* ================= 订单 ================= */
+function newOrder(){
+  const a=randRoad(), b=randRoad();
+  const r=RESTS[Math.floor(Math.random()*RESTS.length)];
+  const h=HOMES[Math.floor(Math.random()*HOMES.length)];
+  const sl=slotName(S.min);
+  const here=player||{x:CVW/2,y:CVH/2};
+  // 实际要骑的路：现在的位置 → 餐厅 → 顾客家，×1.45 是绕开建筑的损耗
+  const road=(Math.hypot(here.x-a.x,here.y-a.y)+Math.hypot(a.x-b.x,a.y-b.y))*1.45;
+  // 限时 = 满体力刚好赶上。体力掉到 35% 以下速度只剩 0.62，必然超时 —— 这是倒U的左半边
+  const limit=Math.max(8,Math.round(road/107));
+  // 远单多给钱，否则玩家只挑近单，取舍就消失了
+  const base=2+road/230;      // 近单约 ¥4，远单约 ¥8 —— 刚好补偿多花的体力和时间
+  const fee=Math.round(base*sl.mult*ratingMult()*(1+S.tech*0.08));
+  return {pick:{x:a.x,y:a.y,n:r[0],e:r[1]},drop:{x:b.x,y:b.y,n:h[0],e:h[1]},
+    fee,limit,t:limit,road,leg:0};
+}
+function ratingMult(){ return 0.5+Math.min(1,S.rating/5)*0.5; }
+
+/* 以当前体力/技术，这一单送得到吗 —— 把取舍摆在明面上，玩家才有得选 */
+function forecast(o){
+  const need=o.road/(150*speedMult());
+  const r=need/o.limit;
+  if(r<=0.72) return {t:'来得及',c:'#059669',late:false};
+  if(r<=1.0)  return {t:'有点赶',c:'#d97706',late:false};
+  return {t:'大概率超时',c:'#dc2626',late:true};
+}
+function distWord(road){ return road<520?'近':road<900?'中等':'远'; }
+
+/* ================= 行动 ================= */
+/* 派单：一次给 3 个，近/中/远各一，让玩家自己权衡「钱多」还是「送得到」 */
+function startOrder(){
+  if(S.min>=DAY_END){ endDay('已到深夜'); return; }
+  if(S.stam<=2){ endDay('体力见底'); return; }
+  if(!player) player={x:CVW/2,y:CVH/2};   // 位置延续：上一单送到哪就从哪出发
+  const pool=[];
+  for(let i=0;i<9;i++) pool.push(newOrder());
+  pool.sort((x,y)=>x.road-y.road);
+  offers=[pool[0],pool[4],pool[8]];
+  phase='offer';
+  renderActs(); updateHUD();
+}
+function takeOrder(i){
+  const o=offers[i];
+  if(!o) return;
+  order=o; offers=[]; phase='run';
+  spawnCars();
+  renderActs(); updateHUD();
+}
+function skipOffers(){
+  offers=[]; phase='idle';
+  advance(10); log('🙅 挑挑拣拣，没接单（花了 10 分钟）');
+  checkEnd(); renderActs(); updateHUD();
+}
+function finishOrder(ok){
+  let pay=Math.round(order.fee*stamPayMult());
+  if(!ok){ pay=Math.round(pay*0.4); S.rating=Math.max(1,S.rating-0.2); S.bad++; }
+  const hard=slotName(S.min).mult>1.5?1.25:1;      // 高峰更累：等餐、挤电梯、催单
+  S.stam=Math.max(0,S.stam-(2.2+order.road/320)*hard);
+  S.money+=pay; S.earn+=pay; S.orders++;
+  pushFloat(player.x,player.y,(ok?'+¥':'+¥')+pay,ok?'#059669':'#d97706');
+  const cut=stamPayMult()<1?'　<span class="lose">体力不支，餐洒了赔了钱</span>':'';
+  log((ok?'✅':'⏰')+' 送达 '+order.drop.n+'　<span class="'+(ok?'earn':'lose')+'">+¥'+pay+'</span>'+(ok?'':'　超时半价 · 评分 -0.1')+cut);
+  advance(Math.round(11+order.road/28));           // 近单约 25 分钟，远单约 60 分钟
+  order=null; phase='idle';
+  checkEnd(); renderActs(); updateHUD(); save();
+}
+function advance(mins){ S.min+=mins; if(S.min>DAY_END) S.min=DAY_END; }
+
+function doRest(){
+  const gain=Math.round(26+S.fav*0.15);
+  S.stam=Math.min(S.stamMax,S.stam+gain);
+  advance(120); log('😴 休息两小时　💪 +'+gain);
+  afterAct();
+}
+function doStudy(){
+  const cost=100;
+  if(S.money<cost){ toast('钱不够，学技术要 ¥'+cost); return; }
+  S.money-=cost; S.spend+=cost; S.tech++;
+  advance(180); log('📚 研究路线算法　🔧 技术 → '+S.tech+'　<span class="lose">-¥'+cost+'</span>');
+  afterAct();
+}
+function doDate(){
+  advance(120);
+  const g=6+Math.floor(Math.random()*5);
+  S.fav+=g; log('☕ 去便利店找苏晴聊天　💗 好感 +'+g);
+  if(S.fav>=30&&S.fav-g<30) log('💗 苏晴说：「你今天看起来没那么累了。」（体力恢复提升）');
+  afterAct();
+}
+function afterAct(){ checkEnd(); renderActs(); updateHUD(); save(); }
+
+function checkEnd(){
+  if(S.min>=DAY_END) endDay('到点了');
+  else if(S.stam<=2) endDay('体力见底，今天跑不动了');
+}
+
+/* ================= 结算 ================= */
+function endDay(why){
+  phase='settle';
+  const live=55, rent=75;    // 吃饭充电 + 隔断房日租，每天都要交
+  let txt='🌙 第 '+S.day+' 天结束（'+why+'）<br>';
+  txt+='<div class="row"><span>今日收入</span><span class="earn">+¥'+S.earn+'</span></div>';
+  txt+='<div class="row"><span>吃饭 + 充电</span><span class="lose">-¥'+live+'</span></div>';
+  txt+='<div class="row"><span>隔断房日租</span><span class="lose">-¥'+rent+'</span></div>';
+  const net=S.earn-live-rent;
+  txt+='<div class="row"><span><b>净收入</b></span><span class="'+(net>=0?'earn':'lose')+'"><b>'+(net>=0?'+':'')+'¥'+net+'</b></span></div>';
+  txt+='<div class="row"><span>完成订单 / 超时</span><span>'+S.orders+' 单 / '+S.bad+' 次</span></div>';
+  if(S.orders>0) txt+='<div class="row"><span>平均每单</span><span>¥'+(S.earn/S.orders).toFixed(1)+'</span></div>';
+  txt+='<div class="row"><span>当前评分</span><span>'+S.rating.toFixed(1)+' ⭐</span></div>';
+  if(S.bad===0&&S.orders>0){ S.rating=Math.min(5,S.rating+0.05); txt+='<div class="tip">今天零超时，评分 +0.05 ⭐</div>'; }
+  S.money+=net;
+  if(S.money<0){
+    S.money=0; S.broke=(S.broke||0)+1;
+    txt+='<div class="tip" style="background:#fee2e2;border-color:#fca5a5">💸 连房租都凑不出了（第 '+S.broke+' / 3 天）。再撑不住，就只能回老家。</div>';
+    if(S.broke>=3) S.over=true;
+  }else if(S.money>150){ S.broke=0; }
+
+  // 疲劳：榨干自己会累积疲劳，压低明天的体力上限（倒U的跨天惩罚）
+  if(S.stamBase===undefined){ S.stamBase=S.stamMax; S.fatigue=0; }
+  if(S.stam<S.stamMax*0.2){
+    S.fatigue=Math.min(30,S.fatigue+12);
+    txt+='<div class="tip" style="background:#fee2e2;border-color:#fca5a5">🥱 今天把自己榨干了 —— 明天体力上限 -12（连着几天会越累越废）</div>';
+  }else if(S.stam>S.stamMax*0.6){
+    S.fatigue=Math.max(0,S.fatigue-8);
+  }
+  S.stamMax=Math.max(50,S.stamBase-S.fatigue);
+  // 收工时还剩多少余力，决定今晚睡得好不好
+  const restQ = S.stam<S.stamMax*0.15?0.55 : S.stam<S.stamMax*0.35?0.72 : 0.9;
+  const sleep=Math.round(S.stamBase*restQ+S.fav*0.2);
+  S.stam=Math.min(S.stamMax,S.stam+sleep);
+
+  if(S.money>=GOAL&&!S.bike){
+    S.money-=GOAL; S.bike=true;
+    txt+='<div class="tip" style="background:#dcfce7;border-color:#86efac">🛵 <b>你买下了自己的电动车。</b><br>不用再每天租电池了 —— 明天开始，体力上限 +20，每单多挣 10%。</div>';
+    S.stamBase+=20; S.stamMax=S.stamBase-S.fatigue; S.stam+=20;
+  }
+  log(txt);
+  showSettle(txt);
+  save();
+}
+function showSettle(txt){
+  let html=txt+'<div style="margin-top:12px">';
+  if(S.over){
+    html+='<div class="tip" style="background:#fee2e2;border-color:#fca5a5"><b>你回老家了。</b><br>'+
+      '连续三天连房租都交不出来。房东把行李堆在了走廊上。<br>'+
+      '第 '+S.day+' 天，跑了 '+S.orders+' 单，评分 '+S.rating.toFixed(1)+'。<br>'+
+      '<span class="muted">下次记住：体力见底的时候硬跑，是在赔钱。</span></div>'+
+      '<button class="primary" style="width:100%;margin-top:10px" onclick="wipe();location.reload()">重开一次 →</button></div>';
+    document.getElementById('acts').innerHTML=html;
+    return;
+  }
+  const over = S.day>=GOAL_DAYS;
+  if(over){
+    html+='<div class="tip"><b>十天过去了。</b><br>'+(S.bike
+      ? '你有了自己的车。第 11 天开始，路还长 —— 但你已经不是那个刚被裁的人了。'
+      : '你还没攒够买车的钱（¥'+S.money+' / ¥'+GOAL+'）。要再来十天吗？')+'</div>';
+  }
+  html+='<button class="primary" style="width:100%;margin-top:10px" onclick="nextDay()">'+(over?'再来十天 →':'睡觉，进入第 '+(S.day+1)+' 天 →')+'</button></div>';
+  document.getElementById('acts').innerHTML=html;
+}
+function nextDay(){
+  S.day++; S.min=DAY_START; S.orders=0; S.earn=0; S.spend=0; S.bad=0;
+  phase='idle'; player={x:CVW/2,y:CVH/2}; spawnCars();
+  log('— 第 '+S.day+' 天开始 —');
+  renderActs(); updateHUD(); save();
+}
+
+/* ================= 日志 & 提示 ================= */
+let logs=[];
+function log(s){ logs.unshift(s); if(logs.length>60) logs.pop();
+  document.getElementById('log').innerHTML=logs.map(x=>'<div>'+x+'</div>').join(''); }
+function toast(s){ const d=document.createElement('div');
+  d.style.cssText='position:fixed;left:50%;top:14%;transform:translateX(-50%);background:#1f2328;color:#fff;padding:9px 16px;border-radius:8px;z-index:99;font-size:14px';
+  d.textContent=s; document.body.appendChild(d); setTimeout(()=>d.remove(),1500); }
+function pushFloat(x,y,t,c){ float.push({x,y,t,c,a:1}); }
+
+/* ================= 渲染 ================= */
+function draw(){
+  ctx.clearRect(0,0,CVW,CVH);
+  // 地面
+  ctx.fillStyle='#dfe3e8'; ctx.fillRect(0,0,CVW,CVH);
+  // 道路
+  ctx.fillStyle='#f3f4f6';
+  for(let y=0;y<MH;y++) for(let x=0;x<MW;x++) if(!map[y][x]) ctx.fillRect(x*TILE,y*TILE,TILE,TILE);
+  // 建筑
+  ctx.fillStyle='#c9ced6';
+  for(let y=0;y<MH;y++) for(let x=0;x<MW;x++) if(map[y][x])
+    ctx.fillRect(x*TILE+2,y*TILE+2,TILE-4,TILE-4);
+  ctx.fillStyle='#b6bcc6';
+  for(let y=0;y<MH;y++) for(let x=0;x<MW;x++) if(map[y][x])
+    ctx.fillRect(x*TILE+7,y*TILE+7,TILE-14,TILE-14);
+
+  if(phase==='run'&&order){
+    const tgt = order.leg===0?order.pick:order.drop;
+    // 目标
+    ctx.font='22px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(tgt.e,tgt.x,tgt.y);
+    ctx.strokeStyle='#2563eb'; ctx.lineWidth=2.5;
+    ctx.beginPath(); ctx.arc(tgt.x,tgt.y,20,0,7); ctx.stroke();
+    // 指向箭头
+    const dx=tgt.x-player.x, dy=tgt.y-player.y, d=Math.hypot(dx,dy);
+    if(d>46){
+      const ux=dx/d, uy=dy/d;
+      ctx.fillStyle='#2563eb';
+      ctx.beginPath();
+      ctx.moveTo(player.x+ux*36,player.y+uy*36);
+      ctx.lineTo(player.x+ux*24-uy*8,player.y+uy*24+ux*8);
+      ctx.lineTo(player.x+ux*24+uy*8,player.y+uy*24-ux*8);
+      ctx.closePath(); ctx.fill();
+    }
+    // 车辆
+    for(const c of cars){
+      ctx.font='19px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText(c.e,c.x,c.y);
+    }
+    // 玩家
+    ctx.font='24px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('🛵',player.x,player.y);
+    // 计时
+    const r=order.t/order.limit;
+    ctx.fillStyle=r>0.4?'#059669':r>0.2?'#d97706':'#dc2626';
+    ctx.fillRect(player.x-18,player.y-24,36,5);
+    ctx.fillStyle='rgba(255,255,255,.9)';
+    ctx.fillRect(player.x-18,player.y-24,36*r,5);
+  }else{
+    for(const c of cars){ ctx.font='19px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(c.e,c.x,c.y); }
+    if(player){
+      ctx.font='24px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText('🛵',player.x,player.y);
+    }
+    if(phase==='settle'){
+      ctx.fillStyle='rgba(15,23,42,.55)'; ctx.fillRect(0,0,CVW,CVH);
+      ctx.fillStyle='#fff'; ctx.font='600 24px sans-serif';
+      ctx.fillText('第 '+S.day+' 天结束',CVW/2,CVH/2);
+    }
+  }
+  // 飘字
+  ctx.textAlign='center'; ctx.font='600 15px sans-serif';
+  for(let i=float.length-1;i>=0;i--){
+    const f=float[i];
+    ctx.globalAlpha=f.a; ctx.fillStyle=f.c; ctx.fillText(f.t,f.x,f.y-26);
+    f.y-=0.7; f.a-=0.014;
+    if(f.a<=0) float.splice(i,1);
+  }
+  ctx.globalAlpha=1;
+}
+
+/* ================= 主循环 ================= */
+function tick(t){
+  raf=requestAnimationFrame(tick);
+  const dt=Math.min(0.05,(t-lastT)/1000); lastT=t;
+  if(phase==='run'&&order){
+    // 移动
+    let dx=0,dy=0;
+    if(keys.ArrowLeft||keys.a) dx--; if(keys.ArrowRight||keys.d) dx++;
+    if(keys.ArrowUp||keys.w) dy--; if(keys.ArrowDown||keys.s) dy++;
+    if(dx||dy){
+      const l=Math.hypot(dx,dy), sp=150*speedMult();
+      const nx=player.x+dx/l*sp*dt;
+      if(!isBlocked(nx,player.y)) player.x=nx;
+      const ny=player.y+dy/l*sp*dt;
+      if(!isBlocked(player.x,ny)) player.y=ny;
+    }
+    // 车辆
+    for(const c of cars){
+      if(c.h){ c.x+=c.v*dt; if(c.x<-20) c.x=CVW+20; if(c.x>CVW+20) c.x=-20; }
+      else  { c.y+=c.v*dt; if(c.y<-20) c.y=CVH+20; if(c.y>CVH+20) c.y=-20; }
+      if(Math.hypot(c.x-player.x,c.y-player.y)<20){
+        const p=crashPenalty();
+        S.stam=Math.max(0,S.stam-2.5*p);
+        shake=6;
+        pushFloat(player.x,player.y-14,'撞车 -'+Math.round(2.5*p)+'💪','#dc2626');
+        c.v=-c.v;
+        player.x+= (player.x-c.x)*0.12;
+        player.y+= (player.y-c.y)*0.12;
+        updateHUD();
+      }
+    }
+    // 目标判定
+    let settled=false;
+    const tgt=order.leg===0?order.pick:order.drop;
+    if(Math.hypot(tgt.x-player.x,tgt.y-player.y)<22){
+      if(order.leg===0){ order.leg=1; pushFloat(player.x,player.y,'取餐 ✓','#2563eb'); }
+      else { finishOrder(order.t>0); settled=true; }
+    }
+    if(!settled){                      // 送达后 order 已置空，不能再读
+      order.t-=dt;
+      if(order.t<=0) finishOrder(false);
+    }
+  }
+  draw();
+}
+
+/* ================= UI ================= */
+function hhmm(m){ const h=Math.floor(m/60); return String(h).padStart(2,'0')+':'+String(Math.floor(m%60/5)*5).padStart(2,'0'); }
+function updateHUD(){
+  const sl=slotName(S.min);
+  const r=stamRatio();
+  const cls=r>0.6?'':r>0.3?'warn':'bad';
+  document.getElementById('hud').innerHTML=
+    '<span class="stat">📅 第 <b>'+S.day+'</b> 天</span>'+
+    '<span class="stat">🕐 <b>'+hhmm(S.min)+'</b> <span style="color:'+sl.c+'">'+sl.n+(sl.mult>1?' ×'+sl.mult.toFixed(1):'')+'</span></span>'+
+    '<span class="stat">💰 <b>¥'+Math.round(S.money)+'</b></span>'+
+    '<span class="stat" style="min-width:96px">💪 '+Math.round(S.stam)+'/'+S.stamMax+'<div class="bar '+cls+'"><i style="width:'+(r*100)+'%"></i></div></span>'+
+    '<span class="stat">⭐ '+S.rating.toFixed(1)+'</span>'+
+    '<span class="stat">🔧 技术 '+S.tech+'</span>'+
+    (S.fatigue>0?'<span class="stat" style="color:#dc2626">🥱 疲劳 -'+S.fatigue+'</span>':'')+
+    '<span class="stat">💗 苏晴 '+S.fav+'</span>'+
+    (S.bike?'<span class="stat" style="color:#059669">🛵 有车</span>':'');
+}
+function renderActs(){
+  const el=document.getElementById('acts');
+  if(phase==='settle') return;
+  if(phase==='offer'){
+    let h='<div style="grid-column:1/-1;font-size:14px"><b>📱 手机响了，三个单子</b>'+
+      '<span class="muted">　挑一个 —— 远的钱多，但你现在骑得动吗？</span></div>';
+    offers.forEach((o,i)=>{
+      const f=forecast(o);
+      h+='<button style="grid-column:1/-1" onclick="takeOrder('+i+')">'+
+         '<b>'+o.pick.e+' '+o.pick.n+' → '+o.drop.e+' '+o.drop.n+'</b>'+
+         '<span class="sub">'+distWord(o.road)+'　报酬 <b>¥'+o.fee+'</b>　限时 '+o.limit+'s　'+
+         '<span style="color:'+f.c+'">'+f.t+'</span></span></button>';
+    });
+    h+='<button style="grid-column:1/-1" onclick="skipOffers()">🙅 都不接，先缓一下（10 分钟）</button>';
+    el.innerHTML=h;
+    if(stamRatio()<0.35) el.insertAdjacentHTML('beforeend',
+      '<div class="tip" style="grid-column:1/-1;background:#fee2e2;border-color:#fca5a5">⚠️ 体力见底，骑不快了 —— 挑近的单还能保住评分，硬接远单就是白跑。</div>');
+    return;
+  }
+  if(phase==='run'){
+    const tgt=order.leg===0?order.pick:order.drop;
+    el.innerHTML='<div style="grid-column:1/-1;font-size:14px">'+
+      '<b>'+(order.leg===0?'去取餐：':'送到：')+tgt.n+'</b> '+
+      '<span class="muted">报酬 ¥'+order.fee+'　剩余 '+Math.ceil(order.t)+'s</span>'+
+      '<div class="muted" style="margin-top:4px">方向键 / WASD 骑车，躲开 🚗</div></div>'+
+      '<button style="grid-column:1/-1" onclick="giveUp()">放弃这一单（扣 ¥10、评分 -0.1）</button>';
+    return;
+  }
+  const can=S.min<DAY_END&&S.stam>2;
+  el.innerHTML=
+    '<button class="primary" '+(can?'':'disabled')+' onclick="startOrder()">🛵 看看有什么单<span class="sub">三个里挑一个 · 约 30 分钟 · 耗体力</span></button>'+
+    '<button onclick="doRest()">😴 休息两小时<span class="sub">💪 +'+(26+Math.round(S.fav*0.15))+' · 不赚钱</span></button>'+
+    '<button '+(S.money<100?'disabled':'')+' onclick="doStudy()">📚 研究路线算法<span class="sub">¥100 · 🔧 +1 · 骑得更快 · 3 小时</span></button>'+
+    '<button onclick="doDate()">☕ 找苏晴<span class="sub">2 小时 · 💗 好感</span></button>'+
+    '<button style="grid-column:1/-1" onclick="endDay(\'主动收工\')">🏠 收工，结束今天 →</button>';
+  if(!can) el.insertAdjacentHTML('beforeend','<div class="tip" style="grid-column:1/-1">时间到或体力见底 —— 今天到此为止，点「收工」看结算。</div>');
+  else if(stamRatio()<0.35) el.insertAdjacentHTML('afterbegin',
+    '<div class="tip" style="grid-column:1/-1;background:#fee2e2;border-color:#fca5a5">⚠️ <b>体力见底，骑不快了。</b>现在接单大概率超时 —— 报酬打对折、评分还要 -0.1。休息两小时反而更赚。</div>');
+}
+function renderTask(){
+  const pct=Math.min(100,S.money/GOAL*100);
+  document.getElementById('task').innerHTML=
+    '<div style="display:flex;justify-content:space-between;font-size:13px"><span>🎯 目标：'+(S.bike?'已买下电动车，继续攒钱':'10 天内攒够 ¥'+GOAL+' 买电动车')+'</span><span>¥'+Math.round(S.money)+' / '+GOAL+'</span></div>'+
+    '<div class="bar"><i style="width:'+pct+'%"></i></div>';
+}
+function giveUp(){
+  S.money=Math.max(0,S.money-10); S.rating=Math.max(1,S.rating-0.1);
+  S.stam=Math.max(0,S.stam-1.5);          // 白跑一趟也累
+  log('❌ 放弃了 '+order.drop.n+' 的单　<span class="lose">-¥10 · 评分 -0.1</span>');
+  advance(15); order=null; phase='idle';
+  checkEnd(); renderActs(); updateHUD(); save();
+}
+
+/* ================= 启动 ================= */
+function startGame(cont){
+  if(cont){ S=load(); if(!S) S=newSave(); log('👋 继续第 '+S.day+' 天'); }
+  else{ S=newSave(); logs=[]; document.getElementById('log').innerHTML='';
+    log('📖 2026 年，你 40 岁，工号 0037。昨天还在改祖传代码，今天名单上有你。');
+    log('🛵 你租了辆电动车，交了押金。手机里弹出第一条派单。'); }
+  document.getElementById('start').classList.add('hide');
+  map=genMap(); player={x:CVW/2,y:CVH/2}; spawnCars(); phase='idle';
+  renderActs(); updateHUD(); renderTask(); save();
+  if(!raf){ lastT=performance.now(); raf=requestAnimationFrame(tick); }
+}
+function wipe(){ localStorage.removeItem(SAVE_KEY); document.getElementById('btnCont').classList.add('hide'); document.getElementById('btnWipe').classList.add('hide'); toast('存档已清空'); }
+
+(function init(){
+  cv=document.getElementById('cv'); ctx=cv.getContext('2d');
+  const dpr=Math.min(2,window.devicePixelRatio||1);
+  cv.width=CVW*dpr; cv.height=CVH*dpr; ctx.scale(dpr,dpr);
+  cv.style.width='100%'; cv.style.aspectRatio=(CVW+'/'+CVH);
+  addEventListener('keydown',e=>{ if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key)) e.preventDefault(); keys[e.key]=true; });
+  addEventListener('keyup',e=>{ keys[e.key]=false; });
+  // 虚拟摇杆（触屏）
+  let tx=null;
+  cv.addEventListener('touchstart',e=>{ tx={x:e.touches[0].clientX,y:e.touches[0].clientY}; keys={}; });
+  cv.addEventListener('touchmove',e=>{ if(!tx)return;
+    const dx=e.touches[0].clientX-tx.x, dy=e.touches[0].clientY-tx.y;
+    keys={}; if(dx<-12)keys.ArrowLeft=true; if(dx>12)keys.ArrowRight=true;
+    if(dy<-12)keys.ArrowUp=true; if(dy>12)keys.ArrowDown=true; });
+  cv.addEventListener('touchend',()=>{ tx=null; keys={}; });
+  if(load()){ document.getElementById('btnCont').classList.remove('hide'); document.getElementById('btnWipe').classList.remove('hide'); }
+  map=genMap(); player={x:CVW/2,y:CVH/2}; spawnCars(); draw();
+})();
+setInterval(()=>{ if(S&&phase!=='settle'){ updateHUD(); renderTask(); } },500);
+</script>
+</body>
+</html>

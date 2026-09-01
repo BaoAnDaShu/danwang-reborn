@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>逆袭人生 · 24小时</title>
+<style>
+  :root{--bg:#f4ede2;--card:#fffaf2;--ink:#3a322a;--muted:#8a7d6d;--blue:#5b8def;--amber:#e0a93b;--green:#5bbf7a;--line:#e6dccb;}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--ink);}
+  .wrap{max-width:720px;margin:0 auto;padding:14px;}
+  .top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+  .day{font-size:17px;font-weight:700}
+  .clock{color:var(--muted);font-variant-numeric:tabular-nums}
+  .money{font-size:14px}
+  .needs{display:flex;gap:10px;flex:1;min-width:240px}
+  .need{flex:1}
+  .need .lab{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:2px}
+  .bar{height:8px;background:#ece2d2;border-radius:6px;overflow:hidden}
+  .bar i{display:block;height:100%;border-radius:6px;transition:width .2s}
+  canvas{width:100%;height:auto;display:block;background:#cdb89a;border-radius:14px;touch-action:manipulation;cursor:pointer}
+  .scene-wrap{position:relative}
+  .hint{position:absolute;left:50%;top:10px;transform:translateX(-50%);background:rgba(58,50,42,.82);color:#fff;padding:6px 12px;border-radius:20px;font-size:13px;pointer-events:none;opacity:0;transition:opacity .2s;white-space:nowrap}
+  .hint.show{opacity:1}
+  .log{margin-top:10px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px;height:150px;overflow:auto;font-size:13px;line-height:1.7}
+  .log div{margin:2px 0}
+  .log .tip{color:var(--muted)} .log .gain{color:#2e8b57} .log .lose{color:#c1453b}
+  .foot{display:flex;justify-content:space-between;align-items:center;margin-top:8px;font-size:12px;color:var(--muted)}
+  .foot button{background:none;border:1px solid var(--line);color:var(--muted);padding:5px 12px;border-radius:8px;cursor:pointer}
+  .overlay{position:fixed;inset:0;background:rgba(40,33,26,.55);display:flex;align-items:center;justify-content:center;padding:16px;z-index:10}
+  .panel{background:var(--card);border-radius:18px;padding:22px;max-width:460px;width:100%;box-shadow:0 10px 40px rgba(0,0,0,.2)}
+  .panel h1{margin:0 0 6px;font-size:22px} .panel h3{margin:0 0 8px;font-size:18px}
+  .panel p{color:var(--muted);font-size:14px;line-height:1.7;white-space:pre-line}
+  .panel .acts{display:flex;gap:10px;margin-top:14px}
+  .panel button{flex:1;padding:11px;border-radius:10px;border:none;font-size:15px;cursor:pointer}
+  .primary{background:var(--blue);color:#fff} .ghost{background:#efe6d8;color:var(--ink)}
+  .opt{display:block;width:100%;text-align:left;background:#f6efe3;border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:8px 0;cursor:pointer;font-size:14px}
+  .hide{display:none!important}
+  /* 手机界面 */
+  .phone-frame{width:300px;max-width:92vw;background:#15151b;border-radius:36px;padding:12px;box-shadow:0 14px 50px rgba(0,0,0,.4)}
+  .phone-screen{background:#0f1115;border-radius:26px;overflow:hidden;position:relative;min-height:440px}
+  .phone-notch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:96px;height:18px;background:#15151b;border-radius:0 0 13px 13px}
+  .phone-status{display:flex;justify-content:space-between;align-items:center;color:#c9cdd6;font-size:12px;padding:9px 16px 2px;font-variant-numeric:tabular-nums}
+  .app-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px 6px;padding:20px 12px 10px}
+  .app{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;padding:8px 2px;border-radius:14px}
+  .app:hover{background:rgba(255,255,255,.07)}
+  .app .ic{width:52px;height:52px;border-radius:15px;display:flex;align-items:center;justify-content:center;font-size:27px;background:#23262f}
+  .app .nm{font-size:11px;color:#d7d9e0}
+  .phone-home{height:7px;width:108px;background:#34373f;border-radius:6px;margin:8px auto 12px}
+  .phone-close{text-align:center;margin-top:10px}
+  .phone-close button{background:none;border:none;color:#b9bcc6;font-size:13px;cursor:pointer}
+  /* 社交列表 */
+  .social-list{max-height:340px;overflow:auto}
+  .contact{display:flex;align-items:center;gap:12px;background:#f6efe3;border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:8px 0;cursor:pointer}
+  .contact:hover{background:#f0e7d6}
+  .contact .avatar{width:44px;height:44px;border-radius:50%;background:#e7dccb;display:flex;align-items:center;justify-content:center;font-size:25px;flex:0 0 auto}
+  .contact .nm2{font-weight:600;font-size:15px}
+  .contact .ln{font-size:12px;color:var(--muted)}
+  .panel .sub{font-size:12px;color:var(--muted);margin:-2px 0 6px}
+  /* 跑外卖接单台 */
+  .order{display:flex;align-items:center;gap:12px;background:#f6efe3;border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:8px 0}
+  .order:hover{background:#f0e7d6}
+  .order .o-main{flex:1;min-width:0}
+  .order .o-route{font-weight:600;font-size:15px;color:var(--ink)}
+  .order .o-meta{font-size:12px;color:var(--muted);margin-top:2px}
+  .order .o-btn{flex:0 0 auto;background:var(--blue);color:#fff;border:none;border-radius:10px;padding:9px 16px;font-size:14px;cursor:pointer}
+  .order .o-btn:disabled{background:#cdbfa9;cursor:not-allowed}
+  /* 升级点芯片 */
+  .spchip{background:#fff3df;border:1px solid #e9c98a;color:#9a6b1e;padding:5px 10px;border-radius:8px;font-size:13px;cursor:pointer;white-space:nowrap}
+  .spchip b{color:#b9791b}
+  /* 技能面板 */
+  .skill-row{display:flex;align-items:center;gap:10px;margin:7px 0}
+  .skill-row .sk-nm{width:46px;font-size:14px;font-weight:600}
+  .skill-row .sk-lv{width:46px;font-size:12px;color:var(--muted)}
+  .skill-row .bar{flex:1;height:8px;background:#ece2d2;border-radius:6px;overflow:hidden}
+  .skill-row .bar i{display:block;height:100%;background:var(--blue);border-radius:6px}
+  .up-row{display:flex;align-items:center;gap:10px;background:#f6efe3;border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:7px 0}
+  .up-row .up-main{flex:1}
+  .up-row .up-nm{font-weight:600;font-size:14px}
+  .up-row .up-ef{font-size:12px;color:var(--muted)}
+  .up-row .up-btn{flex:0 0 auto;background:var(--amber);color:#fff;border:none;border-radius:9px;padding:7px 13px;font-size:13px;cursor:pointer}
+  .up-row .up-btn:disabled{background:#cdbfa9;cursor:not-allowed}
+  /* 门切换动画：双扇门帘 */
+  #doorFx{position:absolute;inset:0;z-index:6;pointer-events:none;overflow:hidden}
+  #doorFx .h{position:absolute;top:0;height:100%;width:50.6%;background:linear-gradient(180deg,#3a2f24,#201811);transition:transform .28s ease;box-shadow:0 0 24px rgba(0,0,0,.4)}
+  #doorFx .h.l{left:0;transform:translateX(-101%)}
+  #doorFx .h.r{right:0;transform:translateX(101%)}
+  #doorFx.close .h{transform:translateX(0)}
+  #doorFx .lab{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);color:#ecdcc4;font-size:15px;letter-spacing:1px;opacity:0;transition:opacity .2s}
+  #doorFx.close .lab{opacity:1}
+  /* 苏晴好感芯片 */
+  .sqchip{background:#ffe6ef;border:1px solid #f0a9c4;color:#b13b6e;padding:5px 10px;border-radius:8px;font-size:13px;cursor:pointer;white-space:nowrap}
+  .sqchip b{color:#c23b78}
+</style>
+</head>
+<body>
+<div class="wrap" id="gameScreen">
+  <div class="top">
+    <div class="day">第 <span id="day">1</span> 天 · <span class="clock" id="clock">06:00</span></div>
+    <div class="needs">
+      <div class="need"><div class="lab"><span>精力</span><span id="enP">100%</span></div><div class="bar"><i id="enBar" style="width:100%;background:var(--blue)"></i></div></div>
+      <div class="need"><div class="lab"><span>饱食</span><span id="huP">100%</span></div><div class="bar"><i id="huBar" style="width:100%;background:var(--amber)"></i></div></div>
+      <div class="need"><div class="lab"><span>体力</span><span id="stP">100%</span></div><div class="bar"><i id="stBar" style="width:100%;background:var(--green)"></i></div></div>
+      <div class="need"><div class="lab"><span>心情</span><span id="moP">100%</span></div><div class="bar"><i id="moBar" style="width:100%;background:#e07ab0"></i></div></div>
+    </div>
+    <div class="money">💰<b id="money">3000</b> · 身价<b id="net">3000</b></div>
+    <div class="sqchip" id="sqChip" onclick="openSocial()" title="点开和苏晴聊聊">❤️ 苏晴 <b id="sqN">0</b></div>
+    <div class="spchip" id="spChip" onclick="openSkills()">📈 升级点 <b id="spN">0</b></div>
+  </div>
+  <div class="scene-wrap">
+    <canvas id="cv" width="680" height="460"></canvas>
+    <div class="hint" id="hint"></div>
+    <div id="doorFx"><div class="h l"></div><div class="h r"></div><div class="lab" id="doorLab"></div></div>
+  </div>
+  <div class="log" id="log"></div>
+  <div class="foot">
+    <span id="goalTxt">目标：攒钱开小店、买车、去中介安家（房源便宜→贵）</span>
+    <span>
+      <button onclick="restart()">重新开始</button>
+      <button onclick="quitGame()">退出游戏</button>
+    </span>
+  </div>
+</div>
+
+<div class="overlay" id="startScreen">
+  <div class="panel">
+    <h1>逆袭人生 · 24小时</h1>
+    <p style="margin-top:-4px;color:var(--blue);font-weight:600">— 一款 24 小时连续生活模拟 —</p>
+    <p>你刚到这座城市，口袋里只有 ¥3000。
+一天有 24 小时，每件事都要花时间；精力没了得睡、肚子饿了得吃、跑单耗体力。
+点场景里的东西，过好每一天，慢慢攒钱逆袭。</p>
+    <p style="margin-top:6px">🏠 <b>家里</b>：🛏️床睡觉回体力 · 🧊冰箱做饭 · 📺电视看剧放松(回心情) · 🛋️沙发歇会 · 📚书桌学技术 · 🏋️哑铃练体力 · 👔衣柜换衣(回心情) · 🧺洗衣机(洗衣静心) · 📱手机开 App
+🚪 点门 <b>出门</b>（带关门动画）到城里
+💞 城里/手机里多找 <b>苏晴</b> 聊天，好感会升温，关系更进一步（顶栏「❤️苏晴」可看进度）
+🎯 做对应事情会练 <b>技能</b>（体力/智力/厨艺/交际/心态/车技）；技能升级拿 <b>升级点</b>，点右上「📈升级点」花掉做永久强化（体力上限/跑单提成/省力跑法等）。
+🌆 <b>城里</b>：🛵接单点跑单 · 🍜面馆点菜(阳春/牛肉/豪华/卤味) · ☕咖啡馆点单/约人 · 🏪电动车店挑车(速度/单价/耗体各不同) · 🏬小店盘店+买道具 · 🏠中介看房(便宜→贵)
+🏠 点「回家」回到屋里</p>
+    <div class="acts">
+      <button class="primary" onclick="beginGame()">开始新游戏</button>
+      <button class="ghost" id="contBtn" onclick="continueGame()">继续存档</button>
+    </div>
+    <p class="sub" style="text-align:center;margin-top:14px;margin-bottom:0">游戏中可随时点底部「退出游戏」回到本界面，进度会自动保存。</p>
+  </div>
+</div>
+
+<div class="overlay hide" id="eventModal">
+  <div class="panel">
+    <h3 id="evTitle"></h3>
+    <p id="evDesc"></p>
+    <div id="evOpts"></div>
+  </div>
+</div>
+
+<div class="overlay hide" id="endModal">
+  <div class="panel center">
+    <h3 id="endTitle"></h3>
+    <p id="endDesc"></p>
+    <div class="acts"><button class="primary" onclick="restart()">重新开始</button></div>
+  </div>
+</div>
+
+<div class="overlay hide" id="phoneModal">
+  <div class="phone-frame">
+    <div class="phone-screen">
+      <div class="phone-notch"></div>
+      <div class="phone-status"><span id="phTime">06:00</span><span>📶 🔋 100%</span></div>
+      <div class="app-grid" id="appGrid"></div>
+      <div class="phone-home"></div>
+    </div>
+    <div class="phone-close"><button onclick="closePhone()">关闭 ✕</button></div>
+  </div>
+</div>
+
+<div class="overlay hide" id="socialModal">
+  <div class="panel">
+    <h3>💬 社交</h3>
+    <p class="sub">点开联系人，聊会儿天。每次见面都要花时间。</p>
+    <div class="social-list" id="socialList"></div>
+    <div class="acts"><button class="ghost" onclick="closeSocial()">返回</button></div>
+  </div>
+</div>
+
+<div class="overlay hide" id="runModal">
+  <div class="panel">
+    <h3>🛵 跑外卖 · 接单台</h3>
+    <p class="sub" id="runSub">挑顺路的单接，注意时间和体力。</p>
+    <div class="social-list" id="runList"></div>
+    <div class="acts"><button class="ghost" onclick="closeRun()">收工回家</button></div>
+  </div>
+</div>
+
+<div class="overlay hide" id="skillModal">
+  <div class="panel">
+    <h3>📈 技能 &amp; 升级</h3>
+    <p class="sub">做对应事情练技能；升级拿「升级点」，下面花掉做永久强化。</p>
+    <div id="skillList"></div>
+    <h3 style="font-size:15px;margin-top:14px">🎯 天赋（花升级点）</h3>
+    <div id="upList"></div>
+    <div class="acts"><button class="ghost" onclick="closeSkills()">返回</button></div>
+  </div>
+</div>
+
+<!-- 咖啡馆 -->
+<div class="overlay hide" id="cafeModal">
+  <div class="panel">
+    <h3>☕ 咖啡馆</h3>
+    <p class="sub">点杯喝的歇口气，或约人聊聊。</p>
+    <div id="cafeList"></div>
+    <div class="acts"><button class="ghost" onclick="hide($('cafeModal'))">离开</button></div>
+  </div>
+</div>
+<!-- 面馆 -->
+<div class="overlay hide" id="noodleModal">
+  <div class="panel">
+    <h3>🍜 面馆</h3>
+    <p class="sub">挑碗面，填饱肚子。</p>
+    <div id="noodleList"></div>
+    <div class="acts"><button class="ghost" onclick="hide($('noodleModal'))">离开</button></div>
+  </div>
+</div>
+<!-- 电动车店 -->
+<div class="overlay hide" id="garageModal">
+  <div class="panel">
+    <h3>🏪 电动车店</h3>
+    <p class="sub">挑一辆座驾：速度越快、单价越高，但价格也不同。</p>
+    <div class="social-list" id="garageList"></div>
+    <div class="acts"><button class="ghost" onclick="hide($('garageModal'))">离开</button></div>
+  </div>
+</div>
+<!-- 小店 -->
+<div class="overlay hide" id="storeModal">
+  <div class="panel">
+    <h3>🏬 小店</h3>
+    <p class="sub">盘下档口做被动收入，或在货架上淘点实用道具。</p>
+    <div class="social-list" id="storeList"></div>
+    <div class="acts"><button class="ghost" onclick="hide($('storeModal'))">离开</button></div>
+  </div>
+</div>
+<!-- 中介 -->
+<div class="overlay hide" id="agentModal">
+  <div class="panel">
+    <h3>🏠 中介</h3>
+    <p class="sub">房源从便宜到贵，先开小店才有安家底气。</p>
+    <div class="social-list" id="agentList"></div>
+    <div class="acts"><button class="ghost" onclick="hide($('agentModal'))">离开</button></div>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const cv = $('cv'), ctx = cv.getContext('2d');
+const DAY_START=360, DAY_END=1440;          // 06:00 → 24:00
+const HUNGER_PH=2.2, ENERGY_PH=1.6;        // 每小时需求衰减
+const FOOD_COST=12, FOODOUT_COST=30, BIKE_COST=1200, SHOP_COST=8000, GOAL=50000, RENT=50;
+const KEY='life24_v1';
+const SKILLNAME={stam:'体力',tech:'智力',cook:'厨艺',social:'交际',mind:'心态',drive:'车技'};
+const SKILLHINT={stam:'锻炼🏋️',tech:'书桌📚',cook:'做饭🧊',social:'社交💬',mind:'电视/沙发',drive:'跑单🛵'};
+const UPGRADES=[
+  {id:'stamCap', nm:'体质强化', ef:'体力上限 +10',        cost:1, max:6},
+  {id:'enCap',   nm:'精力强化', ef:'精力上限 +10',        cost:1, max:6},
+  {id:'incPct',  nm:'跑单提成', ef:'跑单收入 +10%',       cost:2, max:5},
+  {id:'saveStam',nm:'省力跑法', ef:'跑单体力消耗 −1',     cost:2, max:5},
+  {id:'cookEff', nm:'家政能手', ef:'做饭饱食 +8',         cost:1, max:5},
+  {id:'socialEff',nm:'健谈',    ef:'放松/社交心情 +8',    cost:1, max:5},
+  {id:'studyEff',nm:'学霸',     ef:'学习智力 XP +8',      cost:1, max:5},
+];
+// 电动车店：不同车型，速度(speed越小越快)、单价倍率、跑单耗体都不同
+const VEHICLES=[
+  {id:'ebike2nd',nm:'二手电动车', ic:'🛵', cost:1200, speed:0.55, pay:1.25, stam:5, desc:'便宜够用，跑单提速'},
+  {id:'tricycle',nm:'三轮配送车', ic:'🛺', cost:2600, speed:0.72, pay:1.60, stam:6, desc:'装得多单价高，但笨重稍慢'},
+  {id:'moped',    nm:'新国标电摩', ic:'🏍️', cost:3500, speed:0.42, pay:1.40, stam:4, desc:'又快又省劲'},
+  {id:'scooter',  nm:'高端电驴',   ic:'🚀', cost:6800, speed:0.30, pay:1.50, stam:3, desc:'顶配，单王标配'},
+];
+// 中介：房子从便宜到贵
+const HOUSES=[
+  {id:'room', nm:'城中村单间', ic:'🏚️', cost:15000,  desc:'便宜落脚，先安个家'},
+  {id:'old',  nm:'老破小一居', ic:'🏠', cost:35000,  desc:'有厨房有卫，像个家了'},
+  {id:'apt',  nm:'电梯公寓',   ic:'🏢', cost:80000,  desc:'采光好，通勤近'},
+  {id:'villa',nm:'江景大三居', ic:'🏡', cost:200000, desc:'人生赢家，风景独好'},
+];
+// 咖啡馆：点单选项
+const CAFE_OPTS=[
+  {id:'amer', nm:'☕ 美式',       cost:12, en:4,  mo:14, hunger:0,  t:20, desc:'提神，回点心情'},
+  {id:'latt', nm:'🥛 拿铁',       cost:20, en:10, mo:18, hunger:5,  t:25, desc:'暖胃，精力回得快'},
+  {id:'cake', nm:'🥐 咖啡+甜点',  cost:28, en:8,  mo:22, hunger:12, t:30, desc:'小确幸，回血最多'},
+  {id:'chat', nm:'💬 约人聊事',   cost:0,  en:12, mo:10, hunger:0,  t:60, social:true, desc:'结识片区的人'},
+];
+// 面馆：菜品
+const NOODLES=[
+  {id:'plain', nm:'🍜 阳春面',       cost:12, hunger:32, mo:3,  t:20, desc:'实惠管饱'},
+  {id:'beef',  nm:'🍲 牛肉拉面',     cost:25, hunger:55, mo:5,  t:30, desc:'肉多，顶饿'},
+  {id:'lux',   nm:'🍜 豪华加蛋加肠', cost:38, hunger:75, mo:8,  t:35, desc:'奢侈一顿，回血多'},
+  {id:'lu',    nm:'🍢 卤味拼盘',     cost:45, hunger:60, mo:12, t:35, desc:'和老板熟了，心情好'},
+];
+// 小店货架：可买道具（永久效果）
+const STORE_ITEMS=[
+  {id:'box',   nm:'🧳 保温箱',     cost:200, ef:'跑单评分更易涨（+0.1/单）'},
+  {id:'shoes', nm:'👟 跑单运动鞋', cost:300, ef:'跑单体力消耗 −1'},
+  {id:'power', nm:'🔋 充电宝',     cost:150, ef:'跑单不掉心情'},
+  {id:'rain',  nm:'🧥 雨衣',       cost:120, ef:'暴雨事件多赚 50%'},
+  {id:'cup',   nm:'☕ 保温杯',     cost:80,  ef:'做饭/下面更省更饱'},
+  {id:'hack',  nm:'📱 接单外挂',   cost:500, ef:'接单台单价 +8%'},
+];
+const MOOD_PH=0.8;                      // 心情每小时自然衰减
+const rand=(a,b)=>a+Math.random()*(b-a);
+const ri=(a,b)=>Math.floor(rand(a,b+1));
+
+let S=null, phase='start', loc='home', hero=null, walking=false, raf=null;
+
+// 场景物体：室内（家）与室外（城）两个独立场景，用「门」切换
+const OBJS=[
+  // 室内（家）
+  {id:'bed',     n:'床',     e:'🛏️', x:108, y:150, zone:'home', act:'sleep'},
+  {id:'fridge',  n:'冰箱',   e:'🧊', x:308, y:150, zone:'home', act:'eat'},
+  {id:'desk',    n:'书桌',   e:'📚', x:108, y:330, zone:'home', act:'study'},
+  {id:'dumbbell',n:'哑铃',   e:'🏋️', x:210, y:250, zone:'home', act:'exercise'},
+  {id:'phone',   n:'手机',   e:'📱', x:195, y:165, zone:'home', act:'phone'},
+  {id:'sofa',    n:'沙发',   e:'🛋️', x:500, y:330, zone:'home', act:'rest'},
+  {id:'tv',      n:'电视',   e:'📺', x:512, y:62,  zone:'home', act:'tv'},
+  {id:'wardrobe',n:'衣柜',   e:'👔', x:42,  y:255, zone:'home', act:'wardrobe'},
+  {id:'washer',  n:'洗衣机', e:'🧺', x:382, y:255, zone:'home', act:'laundry'},
+  {id:'exit',    n:'出门',   e:'🚪', x:619, y:320, zone:'home', act:'goCity'},
+  // 室外（城）
+  {id:'run',     n:'接单点', e:'🛵', x:150, y:150, zone:'city', act:'run'},
+  {id:'restaurant',n:'面馆', e:'🍜', x:150, y:300, zone:'city', act:'noodle'},
+  {id:'cafe',    n:'咖啡馆', e:'☕', x:320, y:150, zone:'city', act:'cafe'},
+  {id:'bikeshop',n:'电动车店',e:'🏪', x:320, y:300, zone:'city', act:'garage'},
+  {id:'shop',    n:'小店',   e:'🏬', x:490, y:150, zone:'city', act:'store'},
+  {id:'agent',   n:'中介',   e:'🏠', x:490, y:300, zone:'city', act:'agent'},
+  {id:'home_door',n:'回家',  e:'🏠', x:620, y:320, zone:'city', act:'goHome'},
+];
+const ACT={sleep:doSleep,eat:doEat,rest:doRest,study:doStudy,exercise:doExercise,run:openRun,noodle:openNoodle,social:doSocial,tv:doTV,wardrobe:doWardrobe,laundry:doLaundry,cafe:openCafe,garage:openGarage,store:openStore,agent:openAgent,phone:openPhone,goCity:()=>doorTo('city'),goHome:()=>doorTo('home')};
+
+function newSave(){
+  return {day:1,min:DAY_START,money:3000,energy:100,hunger:100,stam:100,mood:100,
+    skills:{stam:1,tech:1,cook:1,social:1,mind:1,drive:1},
+    xp:{stam:0,tech:0,cook:0,social:0,mind:0,drive:0},
+    sp:0,
+    suqing:0,
+    up:{stamCap:0,enCap:0,incPct:0,saveStam:0,cookEff:0,socialEff:0,studyEff:0},
+    bike:false,vehicle:null,items:[],shop:false,house:false,rating:4.5,broke:0,starve:0,over:false,won:false,reason:'',_ev:null,log:[],loc:'home'};
+}
+function stamMax(){ return 100 + (S.skills.stam-1)*8 + S.up.stamCap*10; }
+function enMax(){ return 100 + S.up.enCap*10; }
+function addXp(skill,amt){
+  if(!S.skills[skill]) return;
+  S.xp[skill]+=amt; let leveled=false;
+  while(S.xp[skill]>=100){ S.xp[skill]-=100; S.skills[skill]++; S.sp++; leveled=true; }
+  if(leveled) pushLog('⭐ '+SKILLNAME[skill]+' 升到 Lv.'+S.skills[skill]+'！获得 1 点升级点数（共 '+S.sp+'）','gain');
+}
+function netWorth(){ const v=VEHICLES.find(x=>x.id===S.vehicle); const vres=v?v.cost*0.6:0; return Math.round(S.money + vres + (S.shop?SHOP_COST*0.7:0) + (S.house?GOAL:0)); }
+function curVeh(){ return VEHICLES.find(v=>v.id===S.vehicle)||null; }
+function runSpeed(){ const v=curVeh(); return v?v.speed:1; }       // 跑单耗时系数（小=快）
+function runPayMult(){ const v=curVeh(); return v?v.pay:1; }       // 跑单单价倍率
+function hasItem(id){ return S.items.includes(id); }
+function runStamCost(){ let base=curVeh()?curVeh().stam:9; if(hasItem('shoes')) base--; base-=S.up.saveStam; return Math.max(1,base); }
+function speedLabel(s){ return s<=0.35?'极快':s<=0.45?'快':s<=0.6?'中速':'慢'; }
+function hungry(){ return S.hunger<20; }
+function ratingMult(){ return 0.7+Math.min(1,S.rating/5)*0.3; }
+function peakMult(h){                     // 跑单高峰时段单价加成
+  if(h>=7&&h<9) return 1.6;               // 早高峰
+  if(h>=11&&h<13) return 1.4;             // 午高峰
+  if(h>=17&&h<19) return 1.5;             // 晚高峰
+  if(h>=21&&h<23) return 1.2;             // 夜宵档
+  return 1.0;
+}
+
+/* 推进时间 + 三需求自然衰减（每个动作都走这里） */
+function advance(dur){
+  const h=dur/60;
+  S.hunger=Math.max(0,S.hunger-HUNGER_PH*h);
+  S.energy=Math.max(0,S.energy-(hungry()?ENERGY_PH*1.6:ENERGY_PH)*h);
+  S.mood=Math.max(0,S.mood-MOOD_PH*h);
+  S.min+=dur;
+  if(S.min>=DAY_END) doSleep();
+}
+function checkForced(){
+  if(S.energy<=0 && phase==='play'){ pushLog('⚠️ 眼皮打架，你倒头就睡。'); doSleep(); }
+}
+function afterAct(){
+  if(phase==='event'){ render(); return; }
+  if(!S.over) checkForced();
+  render(); save();
+}
+
+/* ===================== 动作 ===================== */
+function doSleep(){
+  if(phase!=='play') return;
+  S.energy=Math.min(enMax(),S.energy+72); S.stam=Math.min(stamMax(),S.stam+45);
+  S.min=DAY_END; endDay('天黑了');
+}
+function doEat(){
+  if(phase!=='play'||S.over) return;
+  if(S.money<FOOD_COST){ pushLog('冰箱空了，没钱买菜。','lose'); return; }
+  S.money-=FOOD_COST; S.hunger=Math.min(100,S.hunger+45+S.up.cookEff*8); advance(30);
+  addXp('cook',22);
+  pushLog('🧊 在家煮了碗面，胃里暖了。饱食+'+(45+S.up.cookEff*8)+'，−¥'+FOOD_COST); afterAct();
+}
+function doEatOut(){
+  if(phase!=='play'||S.over) return;
+  if(S.money<FOODOUT_COST){ pushLog('下馆子？钱包不允许。','lose'); return; }
+  S.money-=FOODOUT_COST; S.hunger=Math.min(100,S.hunger+50); advance(30);
+  pushLog('🍜 巷口面馆的热汤面加了个蛋，舒服。饱食+50，−¥'+FOODOUT_COST); afterAct();
+}
+function openNoodle(){ if(phase!=='play'||S.over) return; renderNoodle(); show($('noodleModal')); }
+function eatDish(id){
+  const o=NOODLES.find(x=>x.id===id); if(!o) return; hide($('noodleModal'));
+  if(S.money<o.cost){ pushLog('钱不够点'+o.nm+'（需¥'+o.cost+'）。','lose'); render(); save(); return; }
+  let cost=o.cost; if(hasItem('cup')) cost=Math.max(0,cost-4);
+  let hunger=o.hunger; if(hasItem('cup')) hunger+=6;
+  S.money-=cost; S.hunger=Math.min(100,S.hunger+hunger); S.mood=Math.min(100,S.mood+o.mo);
+  advance(o.t);
+  pushLog('🍜 '+o.nm+'：'+(hasItem('cup')?('（保温杯省¥4、更饱）'):o.desc)+' · 饱食+'+hunger+' 心情+'+(o.mo||0)+' −¥'+cost); afterAct();
+}
+function renderNoodle(){ const box=$('noodleList'); if(!box) return; box.innerHTML='';
+  NOODLES.forEach(o=>{ const d=document.createElement('div'); d.className='opt';
+    d.innerHTML='<b>'+o.nm+'</b> ¥'+o.cost+'<br><span style="font-weight:400;color:var(--muted);font-size:12px">'+o.desc+'</span>';
+    d.onclick=()=>eatDish(o.id); box.appendChild(d); }); }
+function doRest(){
+  if(phase!=='play'||S.over) return;
+  S.energy=Math.min(enMax(),S.energy+16); S.stam=Math.min(stamMax(),S.stam+22); S.mood=Math.min(100,S.mood+8+S.up.socialEff*8+(S.suqing>=60?10:0)); advance(60);
+  addXp('mind',10);
+  pushLog('🛋️ 瘫在沙发上刷了会儿手机，缓过劲来。精力+16 体力+22 心情+'+(8+S.up.socialEff*8)); afterAct();
+}
+function doTV(){
+  if(phase!=='play'||S.over) return;
+  S.mood=Math.min(100,S.mood+28+S.up.socialEff*8+(S.suqing>=60?10:0)); S.energy=Math.min(enMax(),S.energy+6); advance(40);
+  addXp('mind',18);
+  pushLog('📺 窝在沙发上看剧，乐了，心情+'+(28+S.up.socialEff*8)+' 精力+6'); afterAct();
+}
+function doStudy(){
+  if(phase!=='play'||S.over) return;
+  S.energy=Math.max(0,S.energy-10); advance(90);
+  addXp('tech',30+S.up.studyEff*8);
+  pushLog('📚 啃完一节配送路线优化，脑子有点累，但智力练了练。'); afterAct();
+}
+function doExercise(){
+  if(phase!=='play'||S.over) return;
+  if(S.energy<12){ pushLog('太累了，先歇会儿再练。','lose'); return; }
+  S.energy=Math.max(0,S.energy-12); advance(30);
+  addXp('stam',22);
+  pushLog('🏋️ 在屋里练了组哑铃，出了身汗，体力练得更扎实了（体力上限随等级提升）。'); afterAct();
+}
+function doWardrobe(){
+  if(phase!=='play'||S.over) return;
+  S.mood=Math.min(100,S.mood+8); S.energy=Math.min(enMax(),S.energy+2); advance(20);
+  addXp('mind',6);
+  pushLog('👔 翻了翻衣柜，换了身干净衣服，整个人清爽了。心情+8 精力+2'); afterAct();
+}
+function doLaundry(){
+  if(phase!=='play'||S.over) return;
+  S.mood=Math.min(100,S.mood+10); advance(35);
+  addXp('mind',8);
+  pushLog('🧺 把攒了一周的脏衣服塞进洗衣机，嗡嗡响着，心也静了。心情+10'); afterAct();
+}
+function doRun(){
+  if(phase!=='play'||S.over) return;
+  if(S.min>=DAY_END){ doSleep(); return; }
+  if(S.stam<=2){ pushLog('腿软了，先睡。'); doSleep(); return; }
+  const dur=Math.round(ri(70,110)*runSpeed());
+  let pay=Math.round((30+S.skills.tech*3)*ratingMult()*(1+S.up.incPct*0.1)*runPayMult()+rand(0,16));
+  if(hasItem('hack')) pay=Math.round(pay*1.08);
+  if(S.stam<28) pay=Math.round(pay*0.6);
+  const cost=runStamCost();
+  S.money+=pay; S.stam-=cost; S.energy=Math.max(0,S.energy-6);
+  if(hasItem('power')) S.mood=Math.min(100,S.mood+2);
+  const wasHungry=S.hunger<20; advance(dur);
+  addXp('drive',16);
+  pushLog('🛵 出门跑单'+(S.vehicle?'（'+curVeh().nm+'）':'（步行）')+'，到手 ¥'+pay+(S.stam<28?'（赶时间单价打了折）':'')+(wasHungry?'（肚子叫了一路）':'')); afterAct();
+}
+
+/* ===================== 跑外卖 · 独立接单台 ===================== */
+let runBoard=[];
+const RUN_FROM=['🍜面馆','🍔汉堡店','☕咖啡馆','🍕披萨店','🥘小炒','🍱便当'];
+const RUN_TO=['🏢写字楼','🏠小区','🏫学校','🏥医院','🏬商场','🚉地铁口'];
+function genOrders(){
+  const h=Math.floor(S.min/60), peak=peakMult(h);
+  runBoard=[];
+  for(let i=0;i<5;i++){
+    const from=RUN_FROM[ri(0,RUN_FROM.length-1)], to=RUN_TO[ri(0,RUN_TO.length-1)];
+    const dist=+(rand(0.6,4.2).toFixed(1));
+    const dur=Math.round((dist*14+30)*runSpeed());
+    let pay=Math.round((22+dist*9+S.skills.tech*4)*ratingMult()*peak+rand(0,18));
+    pay=Math.round(pay*runPayMult());
+    if(hasItem('hack')) pay=Math.round(pay*1.08);
+    runBoard.push({from,to,dist,dur,pay});
+  }
+}
+function renderRunBoard(){
+  const box=$('runList'); if(!box) return; box.innerHTML='';
+  const h=Math.floor(S.min/60), m=Math.floor(S.min%60);
+  const sub=$('runSub'); if(sub) sub.textContent='🕐 '+String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+' · 体力'+Math.round(S.stam)+'% · 评分'+S.rating.toFixed(1)+'⭐ · 挑顺路的单接';
+  if(S.min>=DAY_END){ box.innerHTML='<div class="log tip" style="height:auto">天黑了，收工回家睡吧。</div>'; return; }
+  runBoard.forEach((o,i)=>{
+    const d=document.createElement('div'); d.className='order';
+    d.innerHTML='<div class="o-main"><div class="o-route">'+o.from+' → '+o.to+'</div><div class="o-meta">📏'+o.dist+'km · ⏱约'+o.dur+'分 · 💰预计¥'+o.pay+'</div></div><button class="o-btn">接单</button>';
+    d.querySelector('.o-btn').onclick=()=>acceptOrder(i);
+    box.appendChild(d);
+  });
+}
+function openRun(){
+  if(phase!=='play'||S.over) return;
+  if(S.min>=DAY_END){ pushLog('天都黑了，明天再跑吧。'); render(); save(); return; }
+  genOrders(); renderRunBoard(); show($('runModal'));
+}
+function closeRun(){ hide($('runModal')); }
+function acceptOrder(i){
+  if(phase!=='play'||S.over) return;
+  const o=runBoard[i]; if(!o) return;
+  if(S.min>=DAY_END){ closeRun(); doSleep(); return; }
+  if(S.stam<=2){ pushLog('腿软了，先歇会儿再接单。','lose'); render(); save(); return; }
+  let pay=o.pay; const tired=S.stam<28;
+  if(tired) pay=Math.round(pay*0.6);
+  if(S.mood<20 && !hasItem('power')) pay=Math.round(pay*0.9);
+  pay=Math.round(pay*(1+S.up.incPct*0.1));
+  if(hasItem('hack')) pay=Math.round(pay*1.08);
+  const cost=runStamCost();
+  S.money+=pay; S.stam-=cost; S.energy=Math.max(0,S.energy-6);
+  let rg=tired?-0.1:0.1; if(hasItem('box')) rg+=0.15;
+  S.rating=Math.min(5,Math.max(1,S.rating+rg));
+  const wasHungry=S.hunger<20;
+  advance(o.dur);
+  addXp('drive',14);
+  pushLog('🛵 接了 '+o.from+'→'+o.to+'，到手 ¥'+pay+(tired?'（赶时间单价打折）':'')+(S.mood<20?'（心情差状态打折）':'')+(wasHungry?'（肚子叫了一路）':''));
+  if(!S.over) checkForced();
+  if(phase==='event'||S.over){ closeRun(); render(); save(); return; }
+  genOrders(); renderRunBoard(); render(); save();
+}
+function doSocial(){
+  if(phase!=='play'||S.over) return;
+  S.energy=Math.min(enMax(),S.energy+12); advance(60);
+  addXp('social',20);
+  const lines=['☕ 咖啡馆遇见老乡，聊了聊老家，心情松了。','☕ 跟常点的熟客扯了会儿淡，认识了片区的人。','☕ 听说产业园要开业，往后单子能多。'];
+  pushLog(lines[ri(0,2)]+' 精力+12 · 交际+经验'); afterAct();
+}
+function openCafe(){ if(phase!=='play'||S.over) return; renderCafe(); show($('cafeModal')); }
+function cafeOpt(id){
+  const o=CAFE_OPTS.find(x=>x.id===id); if(!o) return; hide($('cafeModal'));
+  if(o.social){ doSocial(); return; }
+  if(S.money<o.cost){ pushLog('钱不够点'+o.nm+'（需¥'+o.cost+'）。','lose'); render(); save(); return; }
+  S.money-=o.cost; S.energy=Math.min(enMax(),S.energy+o.en); S.mood=Math.min(100,S.mood+o.mo);
+  if(o.hunger) S.hunger=Math.min(100,S.hunger+o.hunger);
+  advance(o.t); addXp('mind', o.id==='cake'?10:6);
+  pushLog('☕ '+o.nm+'：'+o.desc+' · 精力+'+(o.en||0)+' 心情+'+(o.mo||0)+(o.hunger?(' 饱食+'+o.hunger):'')+' −¥'+o.cost); afterAct();
+}
+function renderCafe(){ const box=$('cafeList'); if(!box) return; box.innerHTML='';
+  CAFE_OPTS.forEach(o=>{ const d=document.createElement('div'); d.className='opt'; const price=o.cost?(' ¥'+o.cost):'';
+    d.innerHTML='<b>'+o.nm+'</b>'+price+'<br><span style="font-weight:400;color:var(--muted);font-size:12px">'+o.desc+'</span>';
+    d.onclick=()=>cafeOpt(o.id); box.appendChild(d); }); }
+function buyBike(){ if(phase!=='play'||S.over) return; if(S.vehicle){ pushLog('你已经有车了。'); return; } buyVehicle('ebike2nd'); }
+function openGarage(){ if(phase!=='play'||S.over) return; renderGarage(); show($('garageModal')); }
+function buyVehicle(id){
+  const v=VEHICLES.find(x=>x.id===id); if(!v) return;
+  if(S.vehicle===id){ pushLog('你已经拥有'+v.nm+'了。'); return; }
+  if(S.money<v.cost){ pushLog('钱不够买'+v.ic+v.nm+'（需¥'+v.cost+'）。','lose'); return; }
+  S.money-=v.cost; S.vehicle=id; S.bike=true;
+  pushLog('🛵 提了'+v.ic+v.nm+'，跑单更快更值钱！−¥'+v.cost,'gain'); afterAct();
+}
+function renderGarage(){ const box=$('garageList'); if(!box) return; box.innerHTML='';
+  VEHICLES.forEach(v=>{ const owned=S.vehicle===v.id, afford=S.money>=v.cost;
+    const d=document.createElement('div'); d.className='order';
+    d.innerHTML='<div class="o-main"><div class="o-route">'+v.ic+' '+v.nm+(owned?' ✓':'')+'</div><div class="o-meta">速 '+speedLabel(v.speed)+' · 单价×'+v.pay+' · 耗体'+v.stam+' · ¥'+v.cost+'<br>'+v.desc+'</div></div><button class="o-btn"'+(owned||!afford?' disabled':'')+'>'+(owned?'已购':(afford?'买':'钱不够'))+'</button>';
+    if(!owned&&afford) d.querySelector('.o-btn').onclick=()=>buyVehicle(v.id);
+    box.appendChild(d); }); }
+function openShop(){
+  if(phase!=='play'||S.over) return;
+  if(S.shop){ pushLog('小店已经开着了。'); return; }
+  if(S.money<SHOP_COST){ pushLog('开小店要¥'+SHOP_COST+'，还差点儿。','lose'); return; }
+  S.money-=SHOP_COST; S.shop=true;
+  pushLog('🏬 盘下个小档口，往后每天有 passive 收入。−¥'+SHOP_COST,'gain'); afterAct();
+}
+function openStore(){ if(phase!=='play'||S.over) return; renderStore(); show($('storeModal')); }
+function buyItem(id){
+  const it=STORE_ITEMS.find(x=>x.id===id); if(!it) return;
+  if(hasItem(id)){ pushLog('「'+it.nm+'」已拥有。'); return; }
+  if(S.money<it.cost){ pushLog('钱不够买'+it.nm+'（需¥'+it.cost+'）。','lose'); return; }
+  S.money-=it.cost; S.items.push(id);
+  pushLog('🛒 买了'+it.nm+'：'+it.ef+'。−¥'+it.cost,'gain'); afterAct();
+}
+function renderStore(){ const box=$('storeList'); if(!box) return; box.innerHTML='';
+  if(!S.shop){ const d=document.createElement('div'); d.className='order'; const afford=S.money>=SHOP_COST;
+    d.innerHTML='<div class="o-main"><div class="o-route">🏬 盘下小店</div><div class="o-meta">¥'+SHOP_COST+' · 每日 passive 收入</div></div><button class="o-btn"'+(afford?'':' disabled')+'>'+(afford?'盘下':'钱不够')+'</button>';
+    if(afford) d.querySelector('.o-btn').onclick=()=>{ hide($('storeModal')); openShop(); };
+    box.appendChild(d); }
+  STORE_ITEMS.forEach(it=>{ const owned=hasItem(it.id), afford=S.money>=it.cost;
+    const d=document.createElement('div'); d.className='order';
+    d.innerHTML='<div class="o-main"><div class="o-route">'+it.nm+(owned?' ✓':'')+'</div><div class="o-meta">'+it.ef+' · ¥'+it.cost+'</div></div><button class="o-btn"'+(owned||!afford?' disabled':'')+'>'+(owned?'已购':(afford?'买':'钱不够'))+'</button>';
+    if(!owned&&afford) d.querySelector('.o-btn').onclick=()=>buyItem(it.id);
+    box.appendChild(d); }); }
+function buyHouse(){
+  if(phase!=='play'||S.over) return;
+  if(S.house){ pushLog('你已经买房安家了。'); return; }
+  if(!S.shop){ pushLog('中介说：先有个正经生意（开小店）再谈安家。','lose'); return; }
+  if(netWorth()<GOAL){ pushLog('身价还不到¥'+GOAL.toLocaleString()+'，攒够了再来。','lose'); return; }
+  S.house=true; endLife('逆袭成功','身价破 ¥'+GOAL.toLocaleString()+'，你在这座城市买了房、安了家，站稳了脚跟。',true);
+}
+function openAgent(){ if(phase!=='play'||S.over) return; renderAgent(); show($('agentModal')); }
+function chooseHouse(id){
+  const h=HOUSES.find(x=>x.id===id); if(!h) return;
+  if(S.house){ pushLog('你已经安家了。'); return; }
+  if(!S.shop){ pushLog('中介说：先有个正经生意（开小店）再谈安家。','lose'); return; }
+  if(S.money<h.cost){ pushLog('钱不够买'+h.ic+h.nm+'（需¥'+h.cost.toLocaleString()+'）。','lose'); return; }
+  S.money-=h.cost; S.house=true;
+  endLife('逆袭成功 · '+h.nm,'攒到 ¥'+h.cost.toLocaleString()+'，你在这座城市买了'+h.nm+'，站稳了脚跟。',true);
+}
+function renderAgent(){ const box=$('agentList'); if(!box) return; box.innerHTML='';
+  HOUSES.slice().sort((a,b)=>a.cost-b.cost).forEach(h=>{ const afford=S.money>=h.cost && S.shop;
+    const d=document.createElement('div'); d.className='order';
+    d.innerHTML='<div class="o-main"><div class="o-route">'+h.ic+' '+h.nm+'</div><div class="o-meta">¥'+h.cost.toLocaleString()+' · '+(S.shop?h.desc:'（需先开小店）')+'</div></div><button class="o-btn"'+(afford?'':' disabled')+'>'+(afford?'买下':'不可买')+'</button>';
+    if(afford) d.querySelector('.o-btn').onclick=()=>chooseHouse(h.id);
+    box.appendChild(d); }); }
+
+/* 室内 ↔ 室外 切换（带门帘动画） */
+let transitioning=false;
+function doorTo(dir){
+  if(phase!=='play'||S.over||transitioning) return;
+  const fx=$('doorFx');
+  if(!fx){ dir==='city'?goCity():goHome(); return; }   // 无 DOM 兜底：直接切
+  transitioning=true;
+  $('doorLab').textContent = dir==='city' ? '出门中…' : '回家中…';
+  fx.classList.add('close');                            // 关门帘
+  setTimeout(()=>{
+    dir==='city'?goCity():goHome();                     // 切场景
+    fx.classList.remove('close');                       // 开门帘
+    setTimeout(()=>{ transitioning=false; }, 300);
+  }, 300);
+}
+function goCity(){
+  if(phase!=='play'||S.over) return;
+  loc='city'; S.loc='city'; hero.x=620; hero.y=380; walking=false;
+  pushLog('🚪 你推开门，走进城市的街道。'); render(); save();
+}
+function goHome(){
+  if(phase!=='play'||S.over) return;
+  loc='home'; S.loc='home'; hero.x=340; hero.y=380; walking=false;
+  pushLog('🏠 你回到租屋，关上门。'); render(); save();
+}
+
+/* ===================== 手机 & 社交 ===================== */
+const APPS=[
+  {ic:'🛵',nm:'跑外卖',  a:'run'},
+  {ic:'💬',nm:'社交',    a:'social'},
+  {ic:'💰',nm:'银行',    a:'bank'},
+  {ic:'🗺️',nm:'地图',    a:'map'},
+  {ic:'🎓',nm:'外卖学院',a:'study'},
+  {ic:'📺',nm:'短视频',  a:'video'},
+  {ic:'🏪',nm:'买车',    a:'buybike'},
+  {ic:'📈',nm:'技能',    a:'skills'},
+  {ic:'⚙️',nm:'设置',    a:'set'},
+];
+const CONTACTS=[
+  {nm:'苏晴', av:'👩', ln:'同租的姑娘，便利店上班（好感会升温）', f:()=>{ S.energy=Math.min(100,S.energy+10); S.hunger=Math.min(100,S.hunger+8); return '和苏晴在楼道里聊了会儿，心情松了。精力+10 饱食+8'; }},
+  {nm:'老王', av:'🧔', ln:'一起跑单的骑手兄弟',         f:()=>{ addXp('tech',30); return '老王教你抄了近路，智力+1级经验'; }},
+  {nm:'张姐', av:'👩‍🦰', ln:'片区里常点的熟客',          f:()=>{ S.rating=Math.min(5,S.rating+0.2); return '张姐又给了好评，评分+0.2⭐'; }},
+  {nm:'老乡', av:'🧓', ln:'隔了一条街的老乡',           f:()=>{ S.energy=Math.min(100,S.energy+8); return '和老乡唠了唠老家，亲切。精力+8'; }},
+];
+function openPhone(){
+  if(phase!=='play'||S.over) return;
+  const grid=$('appGrid'); grid.innerHTML='';
+  APPS.forEach(app=>{
+    const d=document.createElement('div'); d.className='app';
+    d.innerHTML='<div class="ic">'+app.ic+'</div><div class="nm">'+app.nm+'</div>';
+    d.onclick=()=>phoneApp(app.a);
+    grid.appendChild(d);
+  });
+  syncPhoneClock();
+  show($('phoneModal'));
+}
+function closePhone(){ hide($('phoneModal')); }
+function syncPhoneClock(){ const h=Math.floor(S.min/60),m=S.min%60; const el=$('phTime'); if(el) el.textContent=String(h).padStart(2,'0')+':'+String(m).padStart(2,'0'); }
+function phoneApp(a){
+  if(phase!=='play') return;
+  if(a==='run'){ closePhone(); openRun(); return; }
+  if(a==='social'){ closePhone(); openSocial(); return; }
+  if(a==='study'){ closePhone(); doStudy(); return; }
+  if(a==='buybike'){ closePhone(); buyBike(); return; }
+  if(a==='video'){ closePhone(); doVideo(); return; }
+  if(a==='bank'){ closePhone(); bankInfo(); return; }
+  if(a==='map'){ closePhone(); mapInfo(); return; }
+  if(a==='set'){ closePhone(); pushLog('⚙️ 设置：这局还顺手，先不管它。'); render(); save(); return; }
+  if(a==='skills'){ closePhone(); openSkills(); return; }
+}
+function doVideo(){
+  if(phase!=='play'||S.over) return;
+  S.energy=Math.min(enMax(),S.energy+6); S.mood=Math.min(100,S.mood+10+S.up.socialEff*8); advance(20);
+  addXp('mind',12);
+  pushLog('📺 躺床上刷了会儿短视频，乐了，精力+6 心情+'+(10+S.up.socialEff*8)); afterAct();
+}
+function bankInfo(){
+  pushLog('💰 银行 App：余额 ¥'+Math.round(S.money)+'，身价 ¥'+netWorth()+'。'); render(); save();
+}
+function mapInfo(){
+  pushLog('🗺️ 附近：接单点🛵 / 面馆🍜 / 咖啡馆☕ / 电动车店🏪 / 小店🏬 / 中介🏠（点城里对应的东西就能去）'); render(); save();
+}
+
+/* ===================== 技能 & 升级点 ===================== */
+function openSkills(){
+  if(phase!=='play'||S.over) return;
+  renderSkills(); show($('skillModal'));
+}
+function closeSkills(){ hide($('skillModal')); }
+function renderSkills(){
+  const sl=$('skillList'); if(sl){ sl.innerHTML='';
+    for(const k of ['stam','tech','cook','social','mind','drive']){
+      const lv=S.skills[k], xp=S.xp[k];
+      const d=document.createElement('div'); d.className='skill-row';
+      d.innerHTML='<div class="sk-nm">'+SKILLNAME[k]+'</div><div class="sk-lv">Lv.'+lv+'</div><div class="bar"><i style="width:'+xp+'%"></i></div><div class="sk-lv">'+xp+'/100 · '+SKILLHINT[k]+'</div>';
+      sl.appendChild(d);
+    }
+  }
+  const ul=$('upList'); if(ul){ ul.innerHTML='';
+    UPGRADES.forEach(u=>{
+      const owned=S.up[u.id]||0, maxed=owned>=u.max, can=S.sp>=u.cost && !maxed;
+      const d=document.createElement('div'); d.className='up-row';
+      d.innerHTML='<div class="up-main"><div class="up-nm">'+u.nm+(owned?(' Lv.'+owned):'')+'</div><div class="up-ef">'+u.ef+(maxed?'（已满级）':' · 耗 '+u.cost+' 点')+'</div></div><button class="up-btn"'+((can&&!maxed)?'':' disabled')+'>'+(maxed?'已满':'升级')+'</button>';
+      d.querySelector('.up-btn').onclick=()=>buyUp(u.id);
+      ul.appendChild(d);
+    });
+  }
+}
+function buyUp(id){
+  const u=UPGRADES.find(x=>x.id===id); if(!u) return;
+  if((S.up[id]||0)>=u.max){ pushLog('该天赋已满级。'); return; }
+  if(S.sp<u.cost){ pushLog('升级点不够（需'+u.cost+'）。','lose'); return; }
+  S.sp-=u.cost; S.up[id]=(S.up[id]||0)+1;
+  if(id==='stamCap') S.stam=Math.min(stamMax(),S.stam+10);
+  if(id==='enCap')   S.energy=Math.min(enMax(),S.energy+10);
+  if(id==='cookEff') S.hunger=Math.min(100,S.hunger+8);
+  if(id==='socialEff') S.mood=Math.min(100,S.mood+8);
+  pushLog('🎯 升级「'+u.nm+'」成功，'+u.ef+'。','gain');
+  renderSkills(); syncHUD(); save();
+}
+function openSocial(){
+  if(phase!=='play') return;
+  const box=$('socialList'); box.innerHTML='';
+  CONTACTS.forEach((c,i)=>{
+    const d=document.createElement('div'); d.className='contact';
+    d.innerHTML='<div class="avatar">'+c.av+'</div><div><div class="nm2">'+c.nm+'</div><div class="ln">'+c.ln+'</div></div>';
+    d.onclick=()=>chooseContact(i);
+    box.appendChild(d);
+  });
+  show($('socialModal'));
+}
+function closeSocial(){ hide($('socialModal')); }
+function suStage(v){ if(v>=100)return '认定的人'; if(v>=80)return '两情相悦'; if(v>=60)return '有点暧昧'; if(v>=40)return '有点心动'; if(v>=20)return '聊得来的邻居'; return '点头之交'; }
+function chooseContact(i){
+  const c=CONTACTS[i]; if(!c) return;
+  hide($('socialModal'));
+  let r;
+  if(c.nm==='苏晴'){
+    const before=S.suqing;
+    S.suqing=Math.min(100,S.suqing+9);
+    addXp('social',20);
+    S.energy=Math.min(enMax(),S.energy+8); S.mood=Math.min(100,S.mood+10);
+    r='和苏晴在楼道里聊了会儿，好感 '+Math.round(before)+'→'+Math.round(S.suqing)+'（'+suStage(S.suqing)+'）';
+    if((before<20&&S.suqing>=20)||(before<40&&S.suqing>=40)||(before<60&&S.suqing>=60)||(before<80&&S.suqing>=80)||(before<100&&S.suqing>=100)){
+      pushLog('💞 你和苏晴的关系更近了一步：'+suStage(S.suqing)+'！','gain');
+    }
+  } else {
+    r=c.f(); addXp('social',20);
+  }
+  advance(45);
+  pushLog('💬 找了'+c.nm+'：'+r+' · 交际+经验'); afterAct();
+}
+
+/* ===================== 每日结算 ===================== */
+function endDay(){
+  if(S.shop) S.money+=Math.round(700+S.skills.tech*120);     // 小店每日被动收入
+  S.money-=RENT;
+  if(S.money<0){
+    S.broke++;
+    pushLog('💸 连房租都凑不出（第'+S.broke+'/3 天），再撑不住就回老家。','lose');
+    if(S.broke>=3) return endLife('破产','连续 3 天交不起房租，你卷铺盖回了老家。逆袭失败。');
+  } else if(S.money>200) S.broke=0;
+  if(S.hunger===0){ S.starve++; if(S.starve>=2) return endLife('饿垮','连着两天没吃饱，身体垮了，被送回老家养病。'); }
+  else S.starve=0;
+  if(Math.random()<0.38){ maybeEvent(); if(phase==='event') return; }   // 事件等非当天给出
+  nextDay();
+}
+function nextDay(){
+  S.day++; S.min=DAY_START;
+  S.mood=Math.min(100,S.mood+12+(S.suqing>=80?8:0));          // 睡一觉，心情回点血（有爱人更甜）
+  pushLog('🌅 第 '+S.day+' 天，天亮了，又是新的一天。','tip');
+  render(); save();
+}
+
+/* ===================== 随机事件 ===================== */
+const EVENTS=[
+  {t:'苏晴的便当',d:'苏晴知道你总顾着跑单不好好吃饭，塞给你一份刚做的便当。',
+   a:{b:'笑着收下',f:()=>{S.hunger=Math.min(100,S.hunger+30);S.mood=Math.min(100,S.mood+12);S.suqing=Math.min(100,S.suqing+3);return '你收下便当，心里暖暖的。饱食+30 心情+12 苏晴好感+3';}},
+   b:{b:'客气推了',f:()=>{S.mood=Math.max(0,S.mood-4);return '你推说不用，苏晴有点小失落。心情−4';}}},
+  {t:'老主顾加微信',d:'一个熟客想长期点你跑腿，得先垫 ¥200 办他家小区门禁卡。',
+   a:{b:'垫钱办卡',f:()=>{S.money-=200;S.rating=Math.min(5,S.rating+0.3);return '门禁办了，评分+0.3⭐，−¥200';}},
+   b:{b:'婉拒',f:()=>'你婉拒了，省下 ¥200'}},
+  {t:'暴雨预警',d:'今晚大暴雨，跑单慢还容易差评，但单价会涨。',
+   a:{b:'冒雨多跑几单',f:()=>{const g=Math.round((120+(hasItem('rain')?60:0))*ratingMult());S.money+=g;S.energy=Math.max(0,S.energy-12);S.stam=Math.max(0,S.stam-14);return '冒雨跑单 +¥'+g+'，但更累'+(hasItem('rain')?'（雨衣加成）':'');}},
+   b:{b:'早点收工休息',f:()=>{S.energy=Math.min(100,S.energy+10);return '早点收工，精力+10';}}},
+  {t:'同行聚会',d:'几个骑手约饭，能打听到哪片单子多，但要花 ¥60 和 1 小时。',
+   a:{b:'去（花钱买情报）',f:()=>{S.money-=60;addXp('tech',30);return '打听到门道，智力+1级经验，−¥60';}},
+   b:{b:'不去',f:()=>'没去，省了 ¥60'}},
+  {t:'身体报警',d:'最近太拼，嗓子疼。硬撑会掉评分，休息一天能缓过来。',
+   a:{b:'硬撑继续跑',f:()=>{S.rating=Math.max(1,S.rating-0.3);S.energy=Math.max(0,S.energy-8);return '硬撑，评分−0.3⭐';}},
+   b:{b:'休一天',f:()=>{S.energy=Math.min(100,S.energy+30);S.hunger=Math.min(100,S.hunger+20);return '休息一天，精力+30 饱食+20';}}},
+];
+function maybeEvent(){
+  const e=EVENTS[Math.floor(Math.random()*EVENTS.length)];
+  S._ev=e; phase='event';
+  if(typeof document!=='undefined'){
+    $('evTitle').textContent='📣 '+e.t;
+    $('evDesc').textContent=e.d;
+    const box=$('evOpts'); box.innerHTML='';
+    [e.a,e.b].forEach((o,i)=>{ const b=document.createElement('button'); b.className='opt'; b.innerHTML='<b>'+o.b+'</b>'; b.onclick=()=>choose(i); box.appendChild(b); });
+    show($('eventModal'));
+  }
+}
+function choose(i){
+  const e=S._ev; if(!e) return;
+  const r=i===0?e.a.f():e.b.f();
+  pushLog('📣 '+e.t+'：'+r, i===0?'gain':'');
+  S._ev=null; phase='play'; hide($('eventModal'));
+  nextDay();
+}
+
+/* ===================== 结束 / 重开 ===================== */
+function endLife(title,desc,win){
+  S.over=true; S.won=!!win; S.reason=title; phase='end';
+  if(typeof document!=='undefined'){
+    $('endTitle').textContent=(win?'🎉 ':'💀 ')+title;
+    $('endDesc').textContent=desc+'\n第 '+S.day+' 天 · 身价 ¥'+netWorth().toLocaleString();
+    show($('endModal'));
+  }
+}
+function restart(){
+  S=newSave(); phase='play'; loc='home'; hero={x:340,y:380}; walking=false;
+  hide($('endModal')); hide($('eventModal')); hide($('startScreen'));
+  pushLog('🔄 新生活开始了。','tip'); render(); save();
+}
+function quitGame(){
+  if(phase==='start') return;
+  if(S) save();                 // 自动保存，下次可「继续存档」
+  phase='start'; walking=false;
+  if(raf){ cancelAnimationFrame(raf); raf=null; }
+  // 关掉所有弹窗，回到开始界面
+  ['eventModal','endModal','phoneModal','socialModal','runModal','skillModal','cafeModal','noodleModal','garageModal','storeModal','agentModal'].forEach(id=>hide($(id)));
+  $('contBtn').style.display = loadExists() ? '' : 'none';
+  show($('startScreen'));
+}
+
+/* ===================== 场景互动 ===================== */
+function walkTo(o){
+  if(phase!=='play'||S.over) return;
+  hero.tx=o.x; hero.ty=o.y+42; hero.target=o; walking=true;
+  showHint('走向'+o.n+'…');
+  if(!raf) loop();
+}
+function loop(){
+  raf=requestAnimationFrame(loop);
+  if(walking && hero.target){
+    const dx=hero.tx-hero.x, dy=hero.ty-hero.y, d=Math.hypot(dx,dy);
+    if(d<4){ walking=false; const o=hero.target; hero.target=null; hideHint(); const fn=ACT[o.act]; if(fn) fn(); }
+    else { hero.x+=dx*0.2; hero.y+=dy*0.2; }
+  }
+  render();
+}
+if(typeof document!=='undefined'){
+  cv.addEventListener('click',e=>{
+    if(phase!=='play'||transitioning) return;
+    const r=cv.getBoundingClientRect();
+    const x=(e.clientX-r.left)*(cv.width/r.width);
+    const y=(e.clientY-r.top)*(cv.height/r.height);
+    let hit=null,best=1e9;
+    for(const o of OBJS){ if(o.zone!==loc) continue; const d=Math.hypot(x-o.x,y-o.y); if(d<48&&d<best){ best=d; hit=o; } }
+    if(hit) walkTo(hit);
+  });
+}
+
+/* ===================== 渲染 ===================== */
+function rr(x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
+function render(){
+  if(!ctx) return;
+  if(loc==='home') drawRoom(); else drawCity();
+  // 物体（只画当前场景）
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  for(const o of OBJS){ if(o.zone!==loc) continue;
+    ctx.font='30px sans-serif'; ctx.fillText(o.e,o.x,o.y);
+    ctx.font='12px sans-serif'; ctx.fillStyle='#5a4d3c'; ctx.fillText(o.n,o.x,o.y+24); ctx.fillStyle='#000';
+  }
+  // 角色
+  if(hero){ ctx.font='30px sans-serif'; ctx.fillText('🧍',hero.x,hero.y); }
+  // 位置标签
+  ctx.font='13px sans-serif'; ctx.textAlign='left'; ctx.fillStyle='rgba(58,50,42,.55)';
+  ctx.fillText(loc==='home'?'🏠 家里':'🌆 室外 · 城市', 12, 22);
+  syncHUD();
+}
+/* 家：带家具家电的房间（占满整屏） */
+function drawRoom(){
+  // 墙 + 地板
+  ctx.fillStyle='#efe6d4'; ctx.fillRect(0,0,680,170);
+  ctx.fillStyle='#c9a87a'; ctx.fillRect(0,170,680,290);
+  ctx.strokeStyle='rgba(120,90,60,.16)'; ctx.lineWidth=1;
+  for(let y=206;y<460;y+=32){ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(680,y); ctx.stroke(); }
+  ctx.fillStyle='rgba(120,90,60,.22)'; ctx.fillRect(0,166,680,6);   // 踢脚线
+  // 窗（右墙）
+  ctx.fillStyle='#bcd8e6'; rr(560,26,78,58,4); ctx.fill();
+  ctx.strokeStyle='#8a7d6d'; ctx.lineWidth=3; ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(599,26); ctx.lineTo(599,84); ctx.moveTo(560,55); ctx.lineTo(638,55); ctx.stroke();
+  // 空调（挂墙机）
+  ctx.fillStyle='#fff'; rr(24,24,82,26,4); ctx.fill(); ctx.strokeStyle='#d9d2c4'; ctx.lineWidth=1; ctx.stroke();
+  ctx.fillStyle='#cfc6b6'; ctx.fillRect(28,50,72,3);
+  // 吊灯（居中）
+  ctx.strokeStyle='#9a8a72'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(330,0); ctx.lineTo(330,14); ctx.stroke();
+  ctx.fillStyle='#e8c96a'; ctx.beginPath(); ctx.arc(330,18,9,0,7); ctx.fill();
+  // 床（含枕头+被子）
+  ctx.fillStyle='#9c7b54'; rr(48,118,120,82,8); ctx.fill();
+  ctx.fillStyle='#f3ece0'; rr(56,124,104,46,6); ctx.fill();
+  ctx.fillStyle='#d9c7a8'; rr(56,124,34,46,6); ctx.fill();
+  ctx.fillStyle='#e7b9a0'; rr(76,152,84,32,5); ctx.fill();
+  // 床头柜（手机摆件由 OBJS 画）
+  ctx.fillStyle='#b08f63'; rr(178,152,34,48,4); ctx.fill();
+  // 冰箱（家电）
+  ctx.fillStyle='#f4f4f4'; rr(280,116,56,104,7); ctx.fill();
+  ctx.strokeStyle='#d8d2c4'; ctx.lineWidth=1.5; ctx.stroke();
+  ctx.fillStyle='#cfc8ba'; ctx.fillRect(280,170,56,3);
+  ctx.fillStyle='#b9b2a4'; rr(324,128,9,15,2); ctx.fill();
+  // 书桌 + 椅子
+  ctx.fillStyle='#a07d52'; rr(54,318,110,12,3); ctx.fill();
+  ctx.fillRect(58,330,8,56); ctx.fillRect(152,330,8,56);
+  ctx.fillStyle='#8a6c46'; rr(78,318,34,30,3); ctx.fill();
+  // 沙发（主要起居）
+  ctx.fillStyle='#7d9b86'; rr(440,312,120,72,12); ctx.fill();
+  ctx.fillStyle='#6f8d79'; rr(440,312,120,26,12); ctx.fill();
+  ctx.fillStyle='#6f8d79'; rr(446,338,28,44,6); ctx.fill();
+  ctx.fillStyle='#6f8d79'; rr(526,338,28,44,6); ctx.fill();
+  // 电视（家电，挂墙）
+  ctx.fillStyle='#23262e'; rr(470,36,84,52,5); ctx.fill();
+  ctx.fillStyle='#3a3f4a'; ctx.fillRect(508,88,8,8);
+  // 门（出门）
+  ctx.fillStyle='#7a6a55'; rr(596,250,46,150,4); ctx.fill();
+  ctx.fillStyle='#5e503f'; rr(602,272,8,46,3); ctx.fill();
+  // 衣柜（左墙）
+  ctx.fillStyle='#8a6c46'; rr(24,222,40,118,4); ctx.fill();
+  ctx.fillStyle='#6f5638'; ctx.fillRect(24,278,40,3);
+  ctx.fillStyle='#c9b48f'; rr(30,228,14,44,2); ctx.fill(); rr(50,228,14,44,2); ctx.fill();
+  ctx.fillStyle='#5e503f'; ctx.beginPath(); ctx.arc(37,250,1.6,0,7); ctx.fill(); ctx.beginPath(); ctx.arc(57,250,1.6,0,7); ctx.fill();
+  // 洗衣机（中部）
+  ctx.fillStyle='#e9eef2'; rr(356,232,52,48,6); ctx.fill();
+  ctx.strokeStyle='#c7ccd2'; ctx.lineWidth=1.5; ctx.stroke();
+  ctx.fillStyle='#9aa6ae'; ctx.fillRect(356,232,52,4);
+  ctx.fillStyle='#bcd2e0'; ctx.beginPath(); ctx.arc(382,256,13,0,7); ctx.fill();
+  ctx.fillStyle='#7e8a93'; ctx.fillRect(374,272,16,3);
+}
+/* 城：街道 + 楼宇（占满整屏） */
+function drawCity(){
+  // 天空
+  ctx.fillStyle='#dfe7ee'; ctx.fillRect(0,0,680,300);
+  // 街道地面
+  ctx.fillStyle='#9aa6b2'; ctx.fillRect(0,300,680,160);
+  ctx.fillStyle='rgba(80,90,100,.16)'; ctx.fillRect(0,296,680,6);
+  // 左侧楼宇
+  ctx.fillStyle='#aab4bf';
+  const bx=[16,76], bh=[150,210];
+  for(let i=0;i<bx.length;i++){ ctx.fillRect(bx[i],300-bh[i],46,bh[i]); }
+  ctx.fillStyle='rgba(255,240,200,.5)';
+  for(let i=0;i<bx.length;i++){ for(let wy=300-bh[i]+14; wy<292; wy+=24){ for(let wx=bx[i]+10; wx<bx[i]+38; wx+=14){ if((wx+wy)%3) ctx.fillRect(wx,wy,7,10); } } }
+  // 自家楼（右侧，回家门后）
+  ctx.fillStyle='#b7a589'; ctx.fillRect(596,150,84,150);
+  ctx.fillStyle='rgba(255,240,200,.45)';
+  for(let wy=160; wy<290; wy+=22){ for(let wx=606; wx<664; wx+=16){ if((wx+wy)%3) ctx.fillRect(wx,wy,8,11); } }
+  // 斑马线
+  ctx.fillStyle='rgba(255,255,255,.30)';
+  for(let x=150;x<470;x+=34) ctx.fillRect(x,392,16,8);
+}
+function syncHUD(){
+  if(!S) return;
+  $('day').textContent=S.day;
+  const h=Math.floor(S.min/60), m=S.min%60;
+  $('clock').textContent=String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');
+  $('money').textContent=Math.round(S.money);
+  $('net').textContent=netWorth();
+  setBar('en',S.energy); setBar('hu',S.hunger); setBar('st',S.stam); setBar('mo',S.mood);
+  const sp=$('spN'); if(sp) sp.textContent=S.sp;
+  const sq=$('sqN'); if(sq) sq.textContent=Math.round(S.suqing);
+}
+function setBar(k,v){ const e=$(k+'Bar'); if(e) e.style.width=Math.max(0,Math.min(100,v))+'%'; const p=$(k+'P'); if(p) p.textContent=Math.round(v)+'%'; }
+
+/* ===================== 杂项 ===================== */
+function pushLog(msg,cls){
+  if(typeof document==='undefined') return;
+  const el=$('log'); const d=document.createElement('div'); if(cls) d.className=cls; d.textContent=msg;
+  el.appendChild(d); el.scrollTop=el.scrollHeight;
+}
+function showHint(t){ const h=$('hint'); if(h){ h.textContent=t; h.classList.add('show'); } }
+function hideHint(){ const h=$('hint'); if(h) h.classList.remove('show'); }
+function show(el){ if(el) el.classList.remove('hide'); }
+function hide(el){ if(el) el.classList.add('hide'); }
+function save(){ try{ localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){} }
+function load(){ try{ const s=localStorage.getItem(KEY); if(!s) return null; const o=JSON.parse(s); if(o.over) return null; S=o; return o; }catch(e){ return null; } }
+function loadExists(){ try{ return !!localStorage.getItem(KEY); }catch(e){ return false; } }
+
+function beginGame(){
+  S=newSave(); phase='play'; loc='home'; hero={x:340,y:380}; walking=false;
+  hide($('startScreen')); pushLog('🌆 你拖着行李箱进了城，先安顿下来。','tip'); render(); save();
+  if(!raf) loop();
+}
+function continueGame(){
+  const o=load();
+  if(!o){ beginGame(); return; }
+  S=o; phase='play'; loc=S.loc||'home'; hero=loc==='city'?{x:620,y:380}:{x:340,y:380}; walking=false;
+  hide($('startScreen')); render(); if(!raf) loop();
+}
+
+/* ===================== 启动 ===================== */
+if(typeof document!=='undefined'){
+  hero={x:190,y:380};
+  $('contBtn').style.display = loadExists() ? '' : 'none';
+  render();
+}
+</script>
+</body>
+</html>

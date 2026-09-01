@@ -337,6 +337,7 @@ function newSave(){
     xp:{stam:0,tech:0,cook:0,social:0,mind:0,drive:0},
     sp:0,
     suqing:0,
+    together:false,
     up:{stamCap:0,enCap:0,incPct:0,saveStam:0,cookEff:0,socialEff:0,studyEff:0},
     bike:false,vehicle:null,items:[],shop:false,house:false,rating:4.5,broke:0,starve:0,over:false,won:false,reason:'',_ev:null,log:[],loc:'home'};
 }
@@ -418,13 +419,13 @@ function renderNoodle(){ const box=$('noodleList'); if(!box) return; box.innerHT
     d.onclick=()=>eatDish(o.id); box.appendChild(d); }); }
 function doRest(){
   if(phase!=='play'||S.over) return;
-  S.energy=Math.min(enMax(),S.energy+16); S.stam=Math.min(stamMax(),S.stam+22); S.mood=Math.min(100,S.mood+8+S.up.socialEff*8+(S.suqing>=60?10:0)); advance(60);
+  S.energy=Math.min(enMax(),S.energy+16); S.stam=Math.min(stamMax(),S.stam+22); S.mood=Math.min(100,S.mood+8+S.up.socialEff*8+(S.suqing>=60?10:0)+(S.together?6:0)); advance(60);
   addXp('mind',10);
   pushLog('🛋️ 瘫在沙发上刷了会儿手机，缓过劲来。精力+16 体力+22 心情+'+(8+S.up.socialEff*8)); afterAct();
 }
 function doTV(){
   if(phase!=='play'||S.over) return;
-  S.mood=Math.min(100,S.mood+28+S.up.socialEff*8+(S.suqing>=60?10:0)); S.energy=Math.min(enMax(),S.energy+6); advance(40);
+  S.mood=Math.min(100,S.mood+28+S.up.socialEff*8+(S.suqing>=60?10:0)+(S.together?6:0)); S.energy=Math.min(enMax(),S.energy+6); advance(40);
   addXp('mind',18);
   pushLog('📺 窝在沙发上看剧，乐了，心情+'+(28+S.up.socialEff*8)+' 精力+6'); afterAct();
 }
@@ -449,9 +450,9 @@ function doWardrobe(){
 }
 function doLaundry(){
   if(phase!=='play'||S.over) return;
-  S.mood=Math.min(100,S.mood+10); advance(35);
+  S.mood=Math.min(100,S.mood+10+(S.together?6:0)); advance(35);
   addXp('mind',8);
-  pushLog('🧺 把攒了一周的脏衣服塞进洗衣机，嗡嗡响着，心也静了。心情+10'); afterAct();
+  pushLog('🧺 把攒了一周的脏衣服塞进洗衣机，嗡嗡响着，心也静了。心情+'+(10+(S.together?6:0))); afterAct();
 }
 function doRun(){
   if(phase!=='play'||S.over) return;
@@ -756,6 +757,10 @@ function chooseContact(i){
     if((before<20&&S.suqing>=20)||(before<40&&S.suqing>=40)||(before<60&&S.suqing>=60)||(before<80&&S.suqing>=80)||(before<100&&S.suqing>=100)){
       pushLog('💞 你和苏晴的关系更近了一步：'+suStage(S.suqing)+'！','gain');
     }
+    if(S.suqing>=100 && !S.together){
+      S.together=true; S.mood=Math.min(100,S.mood+30);
+      pushLog('💍 你和苏晴正式在一起了！往后的日子有了盼头。','gain');
+    }
   } else {
     r=c.f(); addXp('social',20);
   }
@@ -779,7 +784,8 @@ function endDay(){
 }
 function nextDay(){
   S.day++; S.min=DAY_START;
-  S.mood=Math.min(100,S.mood+12+(S.suqing>=80?8:0));          // 睡一觉，心情回点血（有爱人更甜）
+  S.mood=Math.min(100,S.mood+12+(S.suqing>=80?8:0)+(S.together?6:0));          // 睡一觉，心情回点血（有爱人更甜）
+  if(S.together) pushLog('💑 苏晴在家煮了饭等你回来，屋里有了烟火气。','tip');
   pushLog('🌅 第 '+S.day+' 天，天亮了，又是新的一天。','tip');
   render(); save();
 }
@@ -979,7 +985,7 @@ function syncHUD(){
   $('net').textContent=netWorth();
   setBar('en',S.energy); setBar('hu',S.hunger); setBar('st',S.stam); setBar('mo',S.mood);
   const sp=$('spN'); if(sp) sp.textContent=S.sp;
-  const sq=$('sqN'); if(sq) sq.textContent=Math.round(S.suqing);
+  const sq=$('sqN'); if(sq) sq.textContent=S.together?'♥':Math.round(S.suqing);
 }
 function setBar(k,v){ const e=$(k+'Bar'); if(e) e.style.width=Math.max(0,Math.min(100,v))+'%'; const p=$(k+'P'); if(p) p.textContent=Math.round(v)+'%'; }
 
